@@ -1,3 +1,7 @@
 [workspace]
 members = ["familiar-backend", "familiar-rules-engine"]
 resolver = "3"
+
+[workspace.dependencies]
+pak-db = "0.2.1"
+serde = { version = "1.0.219", features = ["derive"] }

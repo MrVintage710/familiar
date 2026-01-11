@@ -1003,6 +1003,7 @@ dependencies = [
 name = "familiar"
 version = "0.1.0"
 dependencies = [
+ "pak-db",
  "serde",
  "serde_json",
  "tauri",
