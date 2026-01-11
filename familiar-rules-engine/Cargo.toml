@@ -1,0 +1,15 @@
+[package]
+name = "vitruvian-rules-engine"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bincode = { version = "1.3.3" }
+clap = {version = "4.5.37", features = ["derive", "cargo"]}
+line-span = "0.1.5"
+lualexer = "0.1.2"
+mlua = {version = "0.11.4", features = ["lua54", "vendored", "serde"]}
+pak-db = "0.2.1"
+serde = {version = "1.0.219", features = ["derive"]}
+thiserror = "2.0.12"
+uuid = {version = "1.18.1", features = ["v4", "serde"]}

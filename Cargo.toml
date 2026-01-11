@@ -1,0 +1,3 @@
+[workspace]
+members = ["familiar-backend", "familiar-rules-engine"]
+resolver = "3"
