@@ -3,5 +3,7 @@ members = ["familiar-backend", "familiar-rules-engine"]
 resolver = "3"
 
 [workspace.dependencies]
-pak-db = "0.2.1"
+fre = { path = "./familiar-rules-engine"}
+pak-db = { path = "../pak" }
 serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1"

@@ -1,15 +1,15 @@
 use std::{collections::HashMap, path::{Path, PathBuf}};
 
-use mlua::{AnyUserData, Lua, UserDataRef, Value};
+use mlua::{AnyUserData, ExternalResult, Lua, UserDataRef, Value};
 use pak_db::{builder::PakBuilder, Pak};
 use uuid::Uuid;
-use crate::{error::{BuildError, VreError}, feature::Feature, lua::{run_file_with_lua}, object::Object};
+use crate::{constructor::Constructor, error::{BuildError, VreError}, feature::Feature, lua::run_file_with_lua, object::Object};
 
 const BUILD_SCRIPT_NAME: &str = "build.lua";
 
 pub struct Rulebook {
     name : String,
-    file : Pak
+    pub file : Pak
 }
 
 impl Rulebook {
@@ -39,13 +39,18 @@ impl Rulebook {
         lua.globals().set("register", lua.create_function(|lua : &Lua, user_data : AnyUserData| {
             if let Some(mut pak_builder) = lua.app_data_mut::<PakBuilder>() {
                 if let Ok(object) = user_data.borrow::<Object>() {
-                    
-                    pak_builder.pak(&*object).map_err(|e| mlua::Error::MemoryError(e.to_string()))?;
+                    pak_builder.pak(&*object).into_lua_err()?;
                     return Ok(());
                 }
                 
                 if let Ok(feature) = user_data.borrow::<Feature>() {
-                    pak_builder.pak(&*feature).map_err(|e| mlua::Error::MemoryError(e.to_string()))?;
+                    pak_builder.pak(&*feature).into_lua_err()?;
+                    return Ok(());
+                }
+                
+                if let Ok(constructor) = user_data.borrow::<Constructor>() {
+                    let pointer = pak_builder.pak(&*constructor).into_lua_err()?;
+                    println!("Registering constructor to {pointer:?}");
                     return Ok(());
                 }
             }
@@ -76,6 +81,8 @@ impl Rulebook {
         let pak = pak_builder.build_file(pak_path)?;
         return Ok(Rulebook { name, file: pak });
     }
+    
+    
 }
 
 //==============================================================================================

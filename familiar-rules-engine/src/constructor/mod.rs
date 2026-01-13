@@ -1,36 +1,55 @@
-use std::{collections::VecDeque, sync::{Arc, RwLock}};
+use mlua::{FromLua, Function, Lua, UserData, Value};
+use ordermap::OrderMap;
+use pak_db::index::{Indices, PakSearchable};
+use serde::{Deserialize, Serialize};
 
-use mlua::{Function, Lua, UserData};
-
-use crate::{common::{enable_meta_methods, HasItemMeta, ItemMeta}, error::VreResult, object::Object, stat::statblock::StatBlock};
+use crate::{common::{HasItemMeta, ItemMeta, choice::Input, enable_meta_methods}, error::VreResult, lua::reference::LuaRef, object::Object, stat::statblock::StatBlock};
 
 //==============================================================================================
 //        
 //==============================================================================================
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Constructor {
     meta : ItemMeta,
-    steps : VecDeque<ConstructorStep>
+    finalize : Option<Vec<u8>>,
+    steps : OrderMap<String, Input>
 }
 
 impl Constructor {
     pub fn new(name : &str) -> Self {
         Self {
             meta : ItemMeta::new(name, "Constructor"),
-            steps : VecDeque::default()
+            finalize: None,
+            steps : OrderMap::default()
         }
+    }
+    
+    pub fn steps(&self) -> ordermap::map::Iter<'_, String, Input>  {
+        self.steps.iter()
+    }
+    
+    pub fn steps_mut(&mut self) -> ordermap::map::IterMut<'_, String, Input> {
+        self.steps.iter_mut()
     }
 }
 
 impl UserData for Constructor {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method_mut("step", |lua, this, (name, callback) : (String, Function)| {
-            let step = ConstructorStep::new(name);
-            
-            
-            
+            let mut step = Input::new();
+            step.as_lua_ref(lua, |_, value| {
+                callback.call(value)
+            })?;
+            this.steps.insert(name, step);
             Ok(())
         });
+        
+        methods.add_method_mut("finalize", |_lua, this, callback : Function| {
+            this.finalize = Some(callback.dump(false));
+            Ok(())
+        });
+        
         enable_meta_methods(methods);
     }
 }
@@ -45,63 +64,28 @@ impl HasItemMeta for Constructor {
     }
 }
 
-//==============================================================================================
-//        Constructor Step
-//==============================================================================================
-
-pub struct ConstructorStep {
-    id : String,
-    inputs : VecDeque<ConstructorInput>
+impl FromLua for Constructor {
+    fn from_lua(value: mlua::Value, _lua: &Lua) -> mlua::Result<Self> {
+        let Value::UserData(data) = value else {return Err(mlua::Error::FromLuaConversionError { from: value.type_name(), to: "Constructor".to_string(), message: None }) };
+        data.take()
+    }
 }
 
-impl ConstructorStep {
-    pub fn new(id : String) -> Self {
-        Self {
-            id,
-            inputs: VecDeque::default(),
-        }
+impl PakSearchable for Constructor {
+    fn get_indices(&self, indices : &mut Indices) {
+        self.meta.get_indices(indices);
     }
 }
 
 //==============================================================================================
-//        ConstructorPageInput
+//        Constructor Lua
 //==============================================================================================
 
-pub struct ConstructorInput {
-    id : String,
-    renderer : Option<String>,
-    kind : ConstructorPageInputKind
-}
-
-pub enum ConstructorPageInputKind {
-    String(String),
-    Number(i64),
-    Group(VecDeque<ConstructorInput>)
-}
-
-//==============================================================================================
-//        Lua Contructor Step
-//==============================================================================================
-
-pub struct LuaConstructorStepBuilder {
-    step : Arc<RwLock<ConstructorStep>>
-}
-
-impl UserData for LuaConstructorStepBuilder {
+pub fn enable_constructor(lua : &Lua) -> VreResult<()> {  
+    lua.globals().set("constructor", lua.create_function(|_, name : String| {
+         let constructor = Constructor::new(&name);
+         Ok(constructor)
+    })?)?;
     
-    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        
-    }
+    Ok(())
 }
-
-//==============================================================================================
-//        Enable Constructor
-//==============================================================================================
-
-// pub fn enable_objects(lua : &Lua) -> VreResult<()> {  
-//     lua.globals().set("constructor", lua.create_function(|_lua, id : String| {
-//          Ok(Constructor::new(&id))
-//     })?)?;
-    
-//     Ok(())
-// }

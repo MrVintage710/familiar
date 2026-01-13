@@ -3,6 +3,7 @@
 -- in all of the tests are in the common folder.
 
 local obj = require("object_feature");
+local constructor = require("constructor_create");
 
-register(obj)
+register(constructor)
 

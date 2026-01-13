@@ -7,7 +7,7 @@ pub mod reference;
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use mlua::{AppDataRefMut, AsChunk, ExternalResult, FromLuaMulti, IntoLuaMulti, Lua, MultiValue};
 use serde::ser::Error;
-use crate::{action::enable_actions, error::VreResult, feature::enable_features, lua::iter::enable_iter, object::enable_objects, stat::{enable_stats, query::enable_query}};
+use crate::{action::enable_actions, constructor::enable_constructor, error::VreResult, feature::enable_features, lua::iter::enable_iter, object::enable_objects, stat::{enable_stats, query::enable_query}};
 
 
 pub fn run_file<R : FromLuaMulti>(path : impl AsRef<Path>) -> VreResult<R> {
@@ -65,6 +65,7 @@ pub(crate) fn enable_apis<P : AsRef<Path>>(lua : &Lua, starting_file : Option<P>
     enable_actions(lua)?;
     enable_stats(lua)?;
     enable_query(lua)?;
+    enable_constructor(lua)?;
     Ok(())
 }
 
