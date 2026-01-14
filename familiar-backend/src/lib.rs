@@ -1,5 +1,5 @@
-use fre::constructor::Constructor;
-use pak_db::{Pak, query::PakQuery};
+use fre::constructor::{Constructor};
+use pak_db::{Pak, group::Pointer, pointer::PakPointer, query::PakQuery};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -8,10 +8,11 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn get_character_constructor() {
+fn get_character_constructor() -> Vec<Constructor> {
     let pak = Pak::new_from_file("./rulebook.pak").unwrap();
-    let constructors = pak.query::<(Constructor, )>(PakQuery::All);
-    println!("{constructors:?}")
+    let constructors = pak.query::<(Constructor, )>(PakQuery::All).unwrap();
+    println!("{constructors:?}");
+    constructors
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

@@ -9,6 +9,8 @@
     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     greetMsg = await invoke("greet", { name });
   }
+  
+  invoke("get_character_constructor").then((data) => console.log("From backend: ", data));
 </script>
 
 <main class="container">
