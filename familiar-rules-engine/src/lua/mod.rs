@@ -7,15 +7,15 @@ pub mod reference;
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use mlua::{AppDataRefMut, AsChunk, ExternalResult, FromLuaMulti, IntoLuaMulti, Lua, MultiValue};
 use serde::ser::Error;
-use crate::{action::enable_actions, constructor::enable_constructor, error::VreResult, feature::enable_features, lua::iter::enable_iter, object::enable_objects, stat::{enable_stats, query::enable_query}};
+use crate::{action::enable_actions, constructor::enable_constructor, error::FreResult, feature::enable_features, lua::iter::enable_iter, object::enable_objects, stat::{enable_stats, query::enable_query}};
 
 
-pub fn run_file<R : FromLuaMulti>(path : impl AsRef<Path>) -> VreResult<R> {
+pub fn run_file<R : FromLuaMulti>(path : impl AsRef<Path>) -> FreResult<R> {
     let lua = Lua::new();
     run_file_with_lua(&lua, path)
 }
 
-pub fn run_file_with_lua<R : FromLuaMulti>(lua : &Lua, path : impl AsRef<Path>) -> VreResult<R> {
+pub fn run_file_with_lua<R : FromLuaMulti>(lua : &Lua, path : impl AsRef<Path>) -> FreResult<R> {
     enable_apis(lua, Some(path.as_ref()))?;
     
     let Some(meta) = lua.app_data_mut::<LuaSourceMeta>() else { 
@@ -25,18 +25,18 @@ pub fn run_file_with_lua<R : FromLuaMulti>(lua : &Lua, path : impl AsRef<Path>) 
     execute_current_file(lua, meta)
 }
 
-pub fn run_function<R : FromLuaMulti>(function : impl AsChunk, args : impl IntoLuaMulti) -> VreResult<R> {
+pub fn run_function<R : FromLuaMulti>(function : impl AsChunk, args : impl IntoLuaMulti) -> FreResult<R> {
     let lua = Lua::new();
     run_function_with_lua(&lua, function, args)
 }
 
-pub fn run_function_with_lua<R : FromLuaMulti>(lua : &Lua, function : impl AsChunk, args : impl IntoLuaMulti) -> VreResult<R> {
+pub fn run_function_with_lua<R : FromLuaMulti>(lua : &Lua, function : impl AsChunk, args : impl IntoLuaMulti) -> FreResult<R> {
     enable_apis::<String>(lua, None)?;
     let function = lua.load(function).into_function()?;
     Ok(function.call(args)?)
 }
 
-fn execute_current_file<R : FromLuaMulti>(lua : &Lua, meta : AppDataRefMut<LuaSourceMeta>) -> VreResult<R> {
+fn execute_current_file<R : FromLuaMulti>(lua : &Lua, meta : AppDataRefMut<LuaSourceMeta>) -> FreResult<R> {
     if let Some(result) = meta.sources.get(&meta.current_file) {
         Ok(R::from_lua_multi(result.clone(), lua)?)
     } else {
@@ -55,7 +55,7 @@ fn execute_current_file<R : FromLuaMulti>(lua : &Lua, meta : AppDataRefMut<LuaSo
     }
 }
 
-pub(crate) fn enable_apis<P : AsRef<Path>>(lua : &Lua, starting_file : Option<P>) -> VreResult<()> {
+pub(crate) fn enable_apis<P : AsRef<Path>>(lua : &Lua, starting_file : Option<P>) -> FreResult<()> {
     enable_features(lua)?;
     enable_iter(lua)?;
     enable_objects(lua)?;
@@ -75,7 +75,7 @@ pub struct LuaSourceMeta {
     pub sources : HashMap<PathBuf, MultiValue>,
 }
 
-fn enable_require(lua : &Lua, starting_file : impl AsRef<Path>) -> VreResult<()> {
+fn enable_require(lua : &Lua, starting_file : impl AsRef<Path>) -> FreResult<()> {
     lua.set_app_data(LuaSourceMeta {
         current_file: PathBuf::from(starting_file.as_ref()),
         sources: HashMap::default(),

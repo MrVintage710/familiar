@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use mlua::Value;
 use serde::{Deserialize, Serialize};
 
-use crate::error::{SchemaError, SchemaResult, VreError, VreResult};
+use crate::error::{SchemaError, SchemaResult, FreError, FreResult};
 
 //==============================================================================================
 //        ValueSchema
@@ -46,7 +46,7 @@ impl ValueSchema {
         }
     }
     
-    pub fn derive(value : &Value) -> VreResult<Self> {
+    pub fn derive(value : &Value) -> FreResult<Self> {
         match value {
             Value::Nil => Ok(ValueSchema::Nil),
             Value::Boolean(_) => Ok(ValueSchema::Boolean),
@@ -57,7 +57,7 @@ impl ValueSchema {
             Value::Table(table) => {
                 let mut map = HashMap::new();
                 for pair in table.pairs::<String, Value>() {
-                    let (key, value) = pair.map_err(|e| VreError::LuaError(e))?;
+                    let (key, value) = pair.map_err(|e| FreError::LuaError(e))?;
                     map.insert(key, ValueSchema::derive(&value)?);
                 }
                 Ok(ValueSchema::Table(map))

@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use pak_db::error::PakError;
 use thiserror::Error;
 
-pub type VreResult<T> = Result<T, VreError>;
+pub type FreResult<T> = Result<T, FreError>;
 pub type SchemaResult<T> = Result<T, SchemaError>;
 
 //==============================================================================================
@@ -11,9 +11,9 @@ pub type SchemaResult<T> = Result<T, SchemaError>;
 //==============================================================================================
 
 #[derive(Error, Debug)]
-pub enum VreError {
+pub enum FreError {
     #[error("Multiple Errors Found: {0:#?}")]
-    MultipleErrors(Vec<VreError>),
+    MultipleErrors(Vec<FreError>),
     
     #[error("{0}")]
     FileNotFound(#[from] std::io::Error),
@@ -32,12 +32,15 @@ pub enum VreError {
     
     #[error("Pak Error: {0}")]
     PakError(#[from] PakError),
+    
+    #[error("There was a problem parsing a dependancy string: {0}")]
+    InvalidDepencyString(String),
 }
 
-impl Into<mlua::Error> for VreError {
+impl Into<mlua::Error> for FreError {
     fn into(self) -> mlua::Error {
         match self {
-            VreError::LuaError(err) => return err,
+            FreError::LuaError(err) => return err,
             _ => {}
         };
         mlua::Error::external(self)

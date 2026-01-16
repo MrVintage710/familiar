@@ -2,7 +2,7 @@ use std::fs;
 
 use mlua::{FromLuaMulti, Lua};
 use pak_db::{group::Pointer, query::PakQuery};
-use crate::{constructor::Constructor, error::VreResult, feature::Feature, lua::run_file_with_lua, object::Object, rulebook::Rulebook, stat::{field::{StatBlockField, StatSourceProvider}, statblock::StatBlock, value::StatValue}, test};
+use crate::{constructor::Constructor, error::FreResult, feature::Feature, lua::run_file_with_lua, object::Object, rulebook::Rulebook, stat::{field::{StatBlockField, StatSourceProvider}, statblock::StatBlock, value::StatValue}, test};
 
 pub const EXAMPLE_RULESET : &'static str = "./rulesets/example-ruleset";
 
@@ -10,13 +10,13 @@ pub const EXAMPLE_RULESET : &'static str = "./rulesets/example-ruleset";
 //        Helper functions
 //==============================================================================================
 
-pub fn run_test<R : FromLuaMulti>(file_name : &str) -> VreResult<R> {
+pub fn run_test<R : FromLuaMulti>(file_name : &str) -> FreResult<R> {
     let lua = runtime()?;
     let source = format!("{EXAMPLE_RULESET}/{file_name}.lua");
     run_file_with_lua(&lua, source)
 }
 
-pub fn runtime() -> VreResult<Lua> {
+pub fn runtime() -> FreResult<Lua> {
     let lua = Lua::new();
     lua.globals().set("assert", lua.create_function(|_lua : &Lua, value : bool| {
         assert!(value);

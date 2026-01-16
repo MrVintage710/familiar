@@ -4,7 +4,7 @@ use mlua::{FromLua, IntoLua, Lua, MetaMethod, UserData, Value, Variadic};
 use pak_db::index::{Indices, PakSearchable};
 use serde::{de::Visitor, ser::{Error, SerializeMap, SerializeSeq}, Deserialize, Serialize, Serializer};
 
-use crate::{error::{VreError, VreResult}, feature::Feature, lua::reference::LuaRef, stat::{field::{StatBlockField, StatSourceProvider}, value::StatValue}};
+use crate::{error::{FreError, FreResult}, feature::Feature, lua::reference::LuaRef, stat::{field::{StatBlockField, StatSourceProvider}, value::StatValue}};
 
 //==============================================================================================
 //        Stat

@@ -1,7 +1,7 @@
 use mlua::{FromLua, Lua, UserData, Value};
 use serde::{ser::Error, Deserialize, Serialize};
 
-use crate::{error::VreResult};
+use crate::{error::FreResult};
 
 //==============================================================================================
 //        Query
@@ -41,7 +41,7 @@ impl FromLua for Query {
 //        Enable Query
 //==============================================================================================
 
-pub fn enable_query(lua : &Lua) -> VreResult<()> {
+pub fn enable_query(lua : &Lua) -> FreResult<()> {
     lua.globals().set("query", lua.create_function(|_lua, query : String| {
          Ok(Query(query))
     })?)?;

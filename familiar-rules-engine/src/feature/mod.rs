@@ -2,7 +2,7 @@ use mlua::{ExternalResult, FromLua, Function, Lua, UserData, Value};
 use pak_db::index::{Indices, PakSearchable};
 use serde::{Deserialize, Serialize};
 
-use crate::{common::{HasItemMeta, ItemMeta, choice::Input, enable_meta_methods}, error::VreResult, lua::{reference::LuaRef, run_function_with_lua}};
+use crate::{common::{HasItemMeta, ItemMeta, choice::Input, enable_meta_methods}, error::FreResult, lua::{reference::LuaRef, run_function_with_lua}};
 
 //==============================================================================================
 //        
@@ -47,7 +47,7 @@ impl Feature {
     //     Ok(())
     // }
     
-    pub fn evoke_setup(&self, lua : &Lua) -> VreResult<Input> {
+    pub fn evoke_setup(&self, lua : &Lua) -> FreResult<Input> {
         let mut input = Input::default();
         if let Some(callback) = &self.setup {
             input.as_lua_ref(lua, |_, input| {
@@ -162,7 +162,7 @@ impl PakSearchable for Feature {
 //        Setup function
 //==============================================================================================
 
-pub fn enable_features(lua : &Lua) -> VreResult<()> {  
+pub fn enable_features(lua : &Lua) -> FreResult<()> {  
     lua.globals().set("feature", lua.create_function(|lua, name : String| {
          let feature = Feature::new(name.clone());
          Ok(feature)

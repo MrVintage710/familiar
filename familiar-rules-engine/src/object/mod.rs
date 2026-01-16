@@ -5,7 +5,7 @@ use pak_db::index::{Indices, PakSearchable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{action::definition::ActionDef, common::{enable_meta_methods_for_ref, HasItemMeta, ItemMeta}, error::VreResult, feature::Feature, lua::reference::LuaRef, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
+use crate::{action::definition::ActionDef, common::{enable_meta_methods_for_ref, HasItemMeta, ItemMeta}, error::FreResult, feature::Feature, lua::reference::LuaRef, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
 
 //==============================================================================================
 //        Object
@@ -25,7 +25,7 @@ impl Object {
         Object { meta: ItemMeta::new(name, "Object"), statblock: stats.clone(), applied_statblock : stats, features: VecDeque::new(), actions: vec![] }
     }
     
-    pub fn add_features(&mut self, features : VecDeque<Feature>) -> VreResult<()> {
+    pub fn add_features(&mut self, features : VecDeque<Feature>) -> FreResult<()> {
         let mut ids = features.iter().map(|feature| feature.get_meta().uuid()).collect::<VecDeque<_>>();
         self.features.append(&mut ids);
         Ok(())
@@ -242,7 +242,7 @@ impl UserData for LuaObjectStatRef {
 //        Enable Objects
 //==============================================================================================
 
-pub fn enable_objects(lua : &Lua) -> VreResult<()> {  
+pub fn enable_objects(lua : &Lua) -> FreResult<()> {  
     lua.globals().set("object", lua.create_function(|_lua, (id, statblock) : (String, StatBlock)| {
          Ok(Object::new(&id, statblock))
     })?)?;

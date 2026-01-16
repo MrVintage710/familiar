@@ -1,5 +1,7 @@
 use fre::constructor::{Constructor};
-use pak_db::{Pak, group::Pointer, pointer::PakPointer, query::PakQuery};
+use pak_db::{Pak, query::PakQuery};
+
+mod rulebook;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]

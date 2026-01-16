@@ -3,7 +3,7 @@ use ordermap::OrderMap;
 use pak_db::index::{Indices, PakSearchable};
 use serde::{Deserialize, Serialize};
 
-use crate::{common::{HasItemMeta, ItemMeta, choice::Input, enable_meta_methods}, error::VreResult, lua::reference::LuaRef, object::Object, stat::statblock::StatBlock};
+use crate::{common::{HasItemMeta, ItemMeta, choice::Input, enable_meta_methods}, error::FreResult, lua::reference::LuaRef, object::Object, stat::statblock::StatBlock};
 
 //==============================================================================================
 //        
@@ -81,7 +81,7 @@ impl PakSearchable for Constructor {
 //        Constructor Lua
 //==============================================================================================
 
-pub fn enable_constructor(lua : &Lua) -> VreResult<()> {  
+pub fn enable_constructor(lua : &Lua) -> FreResult<()> {  
     lua.globals().set("constructor", lua.create_function(|_, name : String| {
          let constructor = Constructor::new(&name);
          Ok(constructor)
