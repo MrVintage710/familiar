@@ -22,7 +22,7 @@ fn get_character_constructor() -> Vec<Constructor> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, get_character_constructor])
+        .invoke_handler(tauri::generate_handler![greet, get_character_constructor, rulebook::get_available_game_systems])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

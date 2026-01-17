@@ -20,7 +20,7 @@ impl Rulebook {
         let path = PathBuf::from(path.as_ref());
         
         //Check directory
-        let build_file_path = Self::check_dir(path)?;
+        let build_file_path = Self::check_dir(&path)?;
         
         //Setup the lua environment
         // let build_src = LuaSource::new(&build_file_path)?;
@@ -76,7 +76,7 @@ impl Rulebook {
         //Remove the pak builder after use
         let mut pak_builder = lua.remove_app_data::<PakBuilder>().unwrap();
         
-        let pak_path = path.clone().join(format!("{}-{version}.pak", name.to_lowercase().replace(" ", "-")));
+        let pak_path = path.clone().join(format!("{}-{version}.rulebook", name.to_lowercase().replace(" ", "-")));
         pak_builder.set_version(version);
         pak_builder.set_name(&name);
         pak_builder.set_extra(&RulebookMeta { game_system, deps })?;
@@ -84,7 +84,7 @@ impl Rulebook {
         return Ok(Rulebook { name, file: pak });
     }
     
-    pub fn check_dir(path : impl AsRef<Path>) -> FreResult<PathBuf> {
+    pub fn check_dir(path : &PathBuf) -> FreResult<PathBuf> {
         //Check and make sure path is a folder
         if !path.is_dir() {return Err(BuildError::BuildPathMustBeFolder(path.clone()).into())}
         

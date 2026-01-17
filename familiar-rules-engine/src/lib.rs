@@ -6,7 +6,7 @@ pub mod action;
 pub mod feature;
 pub mod error;
 pub mod lua;
-mod rulebook;
+pub mod rulebook;
 pub mod common;
 pub mod object;
 pub mod constructor;
