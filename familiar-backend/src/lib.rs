@@ -2,6 +2,7 @@ use fre::constructor::{Constructor};
 use pak_db::{Pak, query::PakQuery};
 
 mod rulebook;
+mod error;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]

@@ -4,7 +4,7 @@ use mlua::{AnyUserData, ExternalResult, FromLua, Lua, UserDataRef, Value};
 use pak_db::{builder::PakBuilder, Pak};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::{constructor::Constructor, error::{BuildError, FreError}, feature::Feature, lua::run_file_with_lua, object::Object};
+use crate::{constructor::Constructor, error::{BuildError, FreError, FreException, FreResult}, feature::Feature, lua::run_file_with_lua, object::Object};
 
 const BUILD_SCRIPT_NAME: &str = "build.lua";
 
@@ -19,12 +19,8 @@ impl Rulebook {
         //Make path buf
         let path = PathBuf::from(path.as_ref());
         
-        //Check and make sure path is a folder
-        if !path.is_dir() {return Err(BuildError::BuildPathMustBeFolder(path.clone()).into())}
-        
-        //Make sure that the file has a build.lua
-        let build_file_path = path.clone().join(BUILD_SCRIPT_NAME);
-        if !build_file_path.exists() { return Err(BuildError::BuildFileNotFound(build_file_path).into()) }
+        //Check directory
+        let build_file_path = Self::check_dir(path)?;
         
         //Setup the lua environment
         // let build_src = LuaSource::new(&build_file_path)?;
@@ -88,7 +84,16 @@ impl Rulebook {
         return Ok(Rulebook { name, file: pak });
     }
     
-    
+    pub fn check_dir(path : impl AsRef<Path>) -> FreResult<PathBuf> {
+        //Check and make sure path is a folder
+        if !path.is_dir() {return Err(BuildError::BuildPathMustBeFolder(path.clone()).into())}
+        
+        //Make sure that the file has a build.lua
+        let build_file_path = path.clone().join(BUILD_SCRIPT_NAME);
+        if !build_file_path.exists() { return Err(BuildError::BuildFileNotFound(build_file_path).into()) }
+        
+        Ok(build_file_path)
+    }
 }
 
 //==============================================================================================

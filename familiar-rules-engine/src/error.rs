@@ -4,6 +4,7 @@ use pak_db::error::PakError;
 use thiserror::Error;
 
 pub type FreResult<T> = Result<T, FreError>;
+pub type FreException = Result<(), FreError>;
 pub type SchemaResult<T> = Result<T, SchemaError>;
 
 //==============================================================================================
