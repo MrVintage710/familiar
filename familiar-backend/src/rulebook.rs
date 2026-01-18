@@ -5,7 +5,6 @@ use pak_db::meta::PakMeta;
 
 use crate::error::{FamiliarError, FamiliarResult};
 
-
 pub const RULEBOOK_DIR : &'static str = "./rulebooks";
 
 #[tauri::command]
