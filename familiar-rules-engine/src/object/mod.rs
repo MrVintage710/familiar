@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, sync::{Arc, RwLock, Weak}, vec};
+use std::{collections::{HashMap, VecDeque}, sync::{Arc, RwLock, Weak}, vec};
 
 use mlua::{ExternalResult, FromLua, IntoLua, Lua, MetaMethod, UserData, Value, Variadic};
 use pak_db::index::{Indices, PakSearchable};
@@ -17,7 +17,7 @@ pub struct Object {
     statblock : StatBlock,
     applied_statblock : StatBlock,
     features : VecDeque<Uuid>,
-    actions : Vec<Uuid>
+    actions : Vec<Uuid>,
 }
 
 impl Object {

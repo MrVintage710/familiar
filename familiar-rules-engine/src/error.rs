@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use base64::DecodeError;
+use image::ImageError;
 use pak_db::error::PakError;
 use thiserror::Error;
 
@@ -34,8 +36,20 @@ pub enum FreError {
     #[error("Pak Error: {0}")]
     PakError(#[from] PakError),
     
+    #[error("Image Error: {0}")]
+    ImageError(#[from] ImageError),
+    
+    #[error("Decode Error: {0}")]
+    DecodeError(#[from] DecodeError),
+    
     #[error("There was a problem parsing a dependancy string: {0}")]
     InvalidDepencyString(String),
+    
+    #[error("Files with the `{0}` extention are not valid asset files.")]
+    FileTypeNotValidAsset(String),
+    
+    #[error("Missing the mime type for file extention `{0}`.")]
+    MissingMimeType(String),
 }
 
 impl Into<mlua::Error> for FreError {

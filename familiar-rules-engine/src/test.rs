@@ -2,7 +2,7 @@ use std::fs;
 
 use mlua::{FromLuaMulti, Lua};
 use pak_db::{group::Pointer, query::PakQuery};
-use crate::{constructor::Constructor, error::FreResult, feature::Feature, lua::run_file_with_lua, object::Object, rulebook::Rulebook, stat::{field::{StatBlockField, StatSourceProvider}, statblock::StatBlock, value::StatValue}, test};
+use crate::{asset::Asset, constructor::Constructor, error::FreResult, feature::Feature, lua::run_file_with_lua, object::Object, rulebook::Rulebook, stat::{field::{StatBlockField, StatSourceProvider}, statblock::StatBlock, value::StatValue}, test};
 
 pub const EXAMPLE_RULESET : &'static str = "./rulesets/example-ruleset";
 
@@ -118,6 +118,16 @@ fn rulebook() {
     
     println!("{constructors:#?}")
     // fs::remove_file(format!("{EXAMPLE_RULESET}/rulebook.pak")).unwrap();
+}
+
+//==============================================================================================
+//        Asset Tests
+//==============================================================================================
+
+#[test]
+fn asset_create() {
+    let asset : Asset = run_test("asset_create").unwrap();
+    println!("{}", asset.data())
 }
 
 //==============================================================================================

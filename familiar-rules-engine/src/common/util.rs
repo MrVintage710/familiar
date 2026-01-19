@@ -1,6 +1,8 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, ffi::OsStr, rc::Rc};
 use mlua::{IntoLua, Lua, Table};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use crate::error::{FreError, FreResult};
 
 
 //==============================================================================================
@@ -22,6 +24,17 @@ pub fn deserialize_wrapped<'de, T,D>(deserializer : D) -> Result<Rc<RefCell<T>>,
 pub fn map_to_lua<A, B>(lua : &Lua, map : HashMap<A, B>) -> mlua::Result<Table> where A : IntoLua, B : IntoLua {
     let table = map.into_iter().fold(lua.create_table()?, |table, (key, value)| { table.set(key, value); table });
     Ok(table)
+}
+
+//==============================================================================================
+//        Mime Type
+//==============================================================================================
+
+pub fn get_mime_type(extention : &OsStr) -> FreResult<String> {
+    if extention == "png" { return Ok("image/png".to_string()) }
+    if extention == "jpeg" || extention == "jpg" { return Ok("image/jpeg".to_string()) }
+    if extention == "webp" { return Ok("image/webp".to_string()) }
+    Err(FreError::MissingMimeType(extention.to_str().unwrap().to_string()))
 }
 
 //==============================================================================================

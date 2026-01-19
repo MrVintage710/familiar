@@ -83,8 +83,8 @@ impl PakSearchable for Constructor {
 
 pub fn enable_constructor(lua : &Lua) -> FreResult<()> {  
     lua.globals().set("constructor", lua.create_function(|_, name : String| {
-         let constructor = Constructor::new(&name);
-         Ok(constructor)
+        let constructor = Constructor::new(&name);
+        Ok(constructor)
     })?)?;
     
     Ok(())

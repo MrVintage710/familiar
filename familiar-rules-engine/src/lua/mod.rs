@@ -7,8 +7,11 @@ pub mod reference;
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use mlua::{AppDataRefMut, AsChunk, ExternalResult, FromLuaMulti, IntoLuaMulti, Lua, MultiValue};
 use serde::ser::Error;
-use crate::{action::enable_actions, constructor::enable_constructor, error::FreResult, feature::enable_features, lua::iter::enable_iter, object::enable_objects, stat::{enable_stats, query::enable_query}};
+use crate::{action::enable_actions, asset::enable_assets, constructor::enable_constructor, error::FreResult, feature::enable_features, lua::iter::enable_iter, object::enable_objects, stat::{enable_stats, query::enable_query}};
 
+//==============================================================================================
+//        Functions for running lua
+//==============================================================================================
 
 pub fn run_file<R : FromLuaMulti>(path : impl AsRef<Path>) -> FreResult<R> {
     let lua = Lua::new();
@@ -66,14 +69,30 @@ pub(crate) fn enable_apis<P : AsRef<Path>>(lua : &Lua, starting_file : Option<P>
     enable_stats(lua)?;
     enable_query(lua)?;
     enable_constructor(lua)?;
+    enable_assets(lua)?;
     Ok(())
 }
+
+//==============================================================================================
+//        Lua Source Meta
+//==============================================================================================
 
 #[derive(Debug)]
 pub struct LuaSourceMeta {
     pub current_file : PathBuf,
     pub sources : HashMap<PathBuf, MultiValue>,
 }
+
+pub fn lua_get_current_file_name(lua : &Lua) -> mlua::Result<String> {
+    let lua_meta = lua.app_data_ref::<LuaSourceMeta>().ok_or(mlua::Error::custom("Missing Lua meta."))?;
+    let file = lua_meta.current_file.file_name().unwrap().to_str().unwrap().to_string();
+    Ok(file)
+}
+
+//==============================================================================================
+//        Require
+//==============================================================================================
+
 
 fn enable_require(lua : &Lua, starting_file : impl AsRef<Path>) -> FreResult<()> {
     lua.set_app_data(LuaSourceMeta {
@@ -93,22 +112,6 @@ fn enable_require(lua : &Lua, starting_file : impl AsRef<Path>) -> FreResult<()>
             meta.current_file = current_path;
         }
         Ok(result)
-        
-        // let (name, source, last_path) = {
-        //     let last_path = meta.current_file.clone();
-        //     meta.current_file = new_file_path.clone();
-        //     let source = meta.sources.entry(new_file_path.clone()).or_insert(LuaSource::new(&new_file_path).into_lua_err()?);
-        //     let source_code = source.source.clone();
-        //     (new_file_path.file_name().unwrap().to_string_lossy().to_string(), source_code, last_path)
-        // };
-        
-        // let res = lua.load(source).set_name(name).eval::<Value>()?;
-        
-        // if let Some(mut meta) = lua.app_data_mut::<LuaSourceMeta>() {
-        //     meta.current_file = last_path;
-        // }
-        
-        // Ok(res)
     })?)?;
     Ok(())
 }

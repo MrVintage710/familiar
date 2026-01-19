@@ -1,1 +1,9 @@
-@import "tailwindcss"
+@import "tailwindcss";
+
+@theme {
+    --color-graphite-500: #303030
+}
+
+:root {
+    @apply bg-graphite-500;
+}

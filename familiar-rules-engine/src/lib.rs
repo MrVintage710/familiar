@@ -10,6 +10,7 @@ pub mod rulebook;
 pub mod common;
 pub mod object;
 pub mod constructor;
+pub mod asset;
 
 
 pub mod prelude {
