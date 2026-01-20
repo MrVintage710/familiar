@@ -35,11 +35,15 @@ pub struct ItemMeta {
 
 impl ItemMeta {
     pub fn new(name : &str, type_name : &str) -> Self {
+        Self::new_extra(name, type_name, "")
+    }
+    
+    pub fn new_extra(name : &str, type_name : &str, extra : &str) -> Self {
         Self {
+            uuid : Uuid::new_v5(&Uuid::NAMESPACE_X500, format!("{name}|{type_name}|{extra}").as_bytes()),
             name : name.to_string(),
             type_name : type_name.to_string(),
             desc : String::new(),
-            uuid : Uuid::new_v4(),
             tags : HashSet::new(),
         }
     }

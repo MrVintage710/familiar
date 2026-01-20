@@ -1,11 +1,11 @@
-use std::{collections::{HashMap, VecDeque}, sync::{Arc, RwLock, Weak}, vec};
+use std::{collections::{VecDeque}, sync::{Arc, RwLock, Weak}, vec};
 
-use mlua::{ExternalResult, FromLua, IntoLua, Lua, MetaMethod, UserData, Value, Variadic};
+use mlua::{FromLua, IntoLua, Lua, MetaMethod, UserData, Value, Variadic};
 use pak_db::index::{Indices, PakSearchable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{action::definition::ActionDef, common::{enable_meta_methods_for_ref, HasItemMeta, ItemMeta}, error::FreResult, feature::Feature, lua::reference::LuaRef, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
+use crate::{action::definition::ActionDef, asset::Asset, common::{HasItemMeta, ItemMeta, enable_meta_methods_for_ref}, error::FreResult, feature::Feature, lua::reference::LuaRef, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
 
 //==============================================================================================
 //        Object
@@ -17,18 +17,23 @@ pub struct Object {
     statblock : StatBlock,
     applied_statblock : StatBlock,
     features : VecDeque<Uuid>,
-    actions : Vec<Uuid>,
+    // actions : Vec<Action>,
+    assets : Vec<Uuid>
 }
 
 impl Object {
     pub fn new(name : &str, stats : StatBlock) -> Object {
-        Object { meta: ItemMeta::new(name, "Object"), statblock: stats.clone(), applied_statblock : stats, features: VecDeque::new(), actions: vec![] }
+        Object { meta: ItemMeta::new(name, "Object"), statblock: stats.clone(), applied_statblock : stats, features: VecDeque::new(), assets: vec![] }
     }
     
-    pub fn add_features(&mut self, features : VecDeque<Feature>) -> FreResult<()> {
+    pub fn add_features(&mut self, features : VecDeque<&Feature>) {
         let mut ids = features.iter().map(|feature| feature.get_meta().uuid()).collect::<VecDeque<_>>();
         self.features.append(&mut ids);
-        Ok(())
+    }
+    
+    pub fn add_assets(&mut self, assets : Vec<&Asset>) {
+        let mut ids = assets.iter().map(|asset| asset.get_meta().uuid()).collect::<Vec<_>>();
+        self.assets.append(&mut ids);
     }
     
     pub fn stats(&self) -> &StatBlock {
@@ -37,6 +42,10 @@ impl Object {
     
     pub fn stats_mut(&mut self) -> &mut StatBlock {
         &mut self.statblock
+    }
+
+    pub fn assets(&self) -> &[Uuid] {
+        &self.assets
     }
     
     // pub fn apply(&self, lua : &Lua) -> VreResult<StatBlock> {
@@ -128,12 +137,14 @@ fn lua_object_index_new(reference : &Arc<RwLock<Object>>, root : &str, key : &st
 
 fn lua_object_add_features(reference : &Arc<RwLock<Object>>, features : Variadic<Feature>) -> mlua::Result<()> {
     let Ok(mut object) = reference.write() else { return Ok(()) };
-    object.add_features(features.into_iter().collect()).into_lua_err()?;
+    object.add_features(features.iter().collect());
     Ok(())
 }
 
-fn lua_object_add_actions() -> mlua::Result<()> {
-    todo!()
+fn lua_object_add_assets(reference : &Arc<RwLock<Object>>, assets : Variadic<Asset>) -> mlua::Result<()> {
+    let Ok(mut object) = reference.write() else { return Ok(()) };
+    object.add_assets(assets.iter().collect());
+    Ok(())
 }
 
 fn lua_provider_get(lua : &Lua, reference : &Arc<RwLock<Object>>, root : &str) -> mlua::Result<Value> {
@@ -161,6 +172,10 @@ impl UserData for LuaObject {
             lua_object_add_features(&this.0, features)
         });
         
+        methods.add_method("add_assets", |_, this, assets : Variadic<Asset>| {
+            lua_object_add_assets(&this.0, assets)
+        });
+        
         methods.add_meta_method(MetaMethod::NewIndex, |_, this, (key, value) : (String, StatBlockField)| {
             lua_object_index_new(&this.0, "", &key, value)
         });
@@ -180,7 +195,7 @@ pub struct LuaObjectRef(Weak<RwLock<Object>>, String);
 
 impl UserData for LuaObjectRef {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_meta_method(MetaMethod::NewIndex, |lua, this, (key, value) : (String, StatBlockField)| {
+        methods.add_meta_method(MetaMethod::NewIndex, |_lua, this, (key, value) : (String, StatBlockField)| {
             let Some(reference) = this.0.upgrade() else { return Ok(()) };
             lua_object_index_new( &reference, &this.1, &key, value)
         });
@@ -190,9 +205,14 @@ impl UserData for LuaObjectRef {
             lua_object_index(lua, &reference, &this.1, &key)
         });
         
-        methods.add_method("add_features", |lua, this, features : Variadic<Feature>| {
+        methods.add_method("add_features", |_lua, this, features : Variadic<Feature>| {
             let Some(object) = this.0.upgrade() else { return Ok(()) };
             lua_object_add_features( &object, features)
+        });
+        
+        methods.add_method("add_assets", |_lua, this, assets : Variadic<Asset>| {
+            let Some(object) = this.0.upgrade() else { return Ok(()) };
+            lua_object_add_assets( &object, assets)
         });
         
         methods.add_method("add_actions", |_lua, this, actions : Variadic<ActionDef>| {

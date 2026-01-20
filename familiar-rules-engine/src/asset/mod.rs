@@ -1,4 +1,4 @@
-use std::{io::Cursor, path::{Path, PathBuf}};
+use std::{fmt::Debug, io::Cursor, path::{Path, PathBuf}};
 
 use base64::{Engine, prelude::BASE64_STANDARD};
 use image::ImageFormat;
@@ -12,7 +12,7 @@ use crate::{common::{HasItemMeta, ItemMeta, enable_meta_methods, util::get_mime_
 //        Asset
 //==============================================================================================
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Asset {
     data : String,
     mime : String,
@@ -41,9 +41,9 @@ impl Asset {
             
             // Then save the data as a css uri
             return Ok(Asset { 
+                meta: ItemMeta::new_extra(name, "Asset", &mime),
                 data,
                 mime,
-                meta: ItemMeta::new(name, "Asset", ) 
             })
         }
         
@@ -60,6 +60,12 @@ impl Asset {
     
     pub fn is_image(&self) -> bool {
         self.mime.starts_with("image")
+    }
+}
+
+impl Debug for Asset {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Asset").field("mime", &self.mime).field("meta", &self.meta).finish()
     }
 }
 

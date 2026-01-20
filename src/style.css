@@ -1,9 +1,25 @@
 @import "tailwindcss";
 
+@import '@skeletonlabs/skeleton'; 
+@import '@skeletonlabs/skeleton-svelte'; 
+@import '@skeletonlabs/skeleton/themes/cerberus';
+@import './theme.css';
+
+@plugin '@tailwindcss/forms';
+
 @theme {
     --color-graphite-500: #303030
 }
 
 :root {
     @apply bg-graphite-500;
+}
+
+.select,
+.input,
+.textarea,
+.ig-input,
+.ig-select {
+	background-color: var(--color-surface-50-950);
+	color: var(--color-surface-950-50);
 }

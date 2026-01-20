@@ -106,6 +106,12 @@ fn object_create() {
     let object : Object = run_test("object_create").unwrap();
 }
 
+#[test]
+fn object_ops() {
+    let object : Object = run_test("object_ops").unwrap();
+    assert_eq!(object.assets().len(), 1);
+}
+
 //==============================================================================================
 //        Rulebook Tests
 //==============================================================================================
