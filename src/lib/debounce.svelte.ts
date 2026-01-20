@@ -7,7 +7,7 @@ type DebounceEvent = Event & {
 let timerId = $state<number>();
 
 export function debounceOnInput(
-  callback: (value: String) => void,
+  callback: (value: string) => void,
   time : number
 ) : FormEventHandler<HTMLInputElement> {
   return (event: Event) => {

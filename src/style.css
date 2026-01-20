@@ -7,14 +7,6 @@
 
 @plugin '@tailwindcss/forms';
 
-@theme {
-    --color-graphite-500: #303030
-}
-
-:root {
-    @apply bg-graphite-500;
-}
-
 .select,
 .input,
 .textarea,

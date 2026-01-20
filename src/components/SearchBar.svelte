@@ -1,14 +1,25 @@
 <script lang="ts">
-    import { debounceOnInput } from '$lib/util.svelte';
-    import {Skull, Search} from '@lucide/svelte';
-    let searchText = $state("")
+    import { debounceOnInput } from '$lib/debounce.svelte';
+    import type { Searchable } from '$lib/search';
+    import search from '$lib/search';
+    import {Search} from '@lucide/svelte';
     
-    let props = $props();
+    type Props = { 
+      items : Searchable[],
+      debounce? : number,
+      class? : string
+    }
     
-    const oninput = debounceOnInput((value) => {console.log(value)}, 300)
+    let { items = $bindable(), debounce = 300, 'class' : clazz} : Props = $props();
+    let tags : string[] = $state([])
+    
+    // svelte-ignore state_referenced_locally
+    const oninput = debounceOnInput((value) => {
+      items = search(items, value, tags)
+    }, debounce)
 </script>
 
-<div class={[props.class, "h-12 preset-outlined-primary-500 rounded-2xl flex items-center px-2 gap-2"]}>
+<div class={[clazz, "h-12 preset-outlined-primary-500 rounded-2xl flex items-center px-2 gap-2"]}>
     <Search/>
     <input 
         {oninput}
@@ -17,5 +28,3 @@
         placeholder="Search..."
     />
 </div>
-
-{searchText}
