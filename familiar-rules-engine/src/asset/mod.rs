@@ -6,7 +6,7 @@ use mlua::{ExternalResult, FromLua, Lua, UserData, Value};
 use pak_db::index::PakSearchable;
 use serde::{Deserialize, Serialize};
 
-use crate::{common::{HasItemMeta, ItemMeta, enable_meta_methods, util::get_mime_type}, error::{FreError, FreException, FreResult}, lua::LuaSourceMeta};
+use crate::{common::{meta::{HasItemMeta, ItemMeta, enable_meta_methods}, util::get_mime_type}, error::{FreError, FreException, FreResult}, lua::LuaSourceMeta};
 
 //==============================================================================================
 //        Asset

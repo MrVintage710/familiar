@@ -1356,6 +1356,7 @@ dependencies = [
  "base64 0.22.1",
  "bincode",
  "clap",
+ "glob",
  "image",
  "line-span",
  "lualexer",

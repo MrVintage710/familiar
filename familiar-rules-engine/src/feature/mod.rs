@@ -2,7 +2,7 @@ use mlua::{ExternalResult, FromLua, Function, Lua, UserData, Value};
 use pak_db::index::{Indices, PakSearchable};
 use serde::{Deserialize, Serialize};
 
-use crate::{common::{HasItemMeta, ItemMeta, choice::Input, enable_meta_methods}, error::FreResult, lua::{reference::LuaRef, run_function_with_lua}};
+use crate::{common::{choice::Input, meta::{HasItemMeta, ItemMeta, enable_meta_methods}}, error::FreResult, lua::{reference::LuaRef, run_function_with_lua}};
 
 //==============================================================================================
 //        

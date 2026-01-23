@@ -1,8 +1,6 @@
 --- This file demonstrates how to create a stat that would be put into a statblock.
 --- A `Stat` is a type that that holds a values that, when changed, will update all derived values.
 
-print("Running Source")
-
 local first_name = stat("John");
 local last_name = stat("Doe");
 

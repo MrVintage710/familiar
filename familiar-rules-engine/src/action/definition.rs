@@ -2,7 +2,7 @@ use mlua::{FromLua, Function, Lua, UserData, UserDataRefMut, Value};
 use pak_db::index::{Indices, PakSearchable};
 use serde::{Deserialize, Serialize};
 
-use crate::common::{enable_meta_methods, HasItemMeta, ItemMeta};
+use crate::common::meta::{HasItemMeta, ItemMeta, enable_meta_methods};
 
 //===============================================================================================
 //          ActionDefinition

@@ -4,14 +4,14 @@
   import SearchBar from "@components/SearchBar.svelte";
   import { Plus } from "@lucide/svelte";
   
-  
+  let results = $state([]);
   
   // invoke("get_available_game_systems").then((data) => console.log("From backend: ", data));
 </script>
 
-<div class="w-screen h-screen flex flex-col p-4">
+<div class="w-full flex flex-col p-4">
   <div class="flex gap-4 justify-center items-center ">
-    <SearchBar items={[]} class="w-full"/>
+    <SearchBar items={[]} bind:results={results} class="w-full"/>
     <button type="button" class="btn preset-filled-primary-100-900 h-12">
       <span class="">New</span>
       <Plus class="stroke-primary-500"/> 

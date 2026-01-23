@@ -10,6 +10,12 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+#[tauri::command]
+fn test_character(name: &str) -> String {
+    format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
 #[tauri::command]
 fn get_character_constructor() -> Vec<Constructor> {
     let pak = Pak::new_from_file("./rulebook.pak").unwrap();

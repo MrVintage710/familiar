@@ -5,7 +5,7 @@ use pak_db::index::{Indices, PakSearchable};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{action::definition::ActionDef, asset::Asset, common::{HasItemMeta, ItemMeta, enable_meta_methods_for_ref}, error::FreResult, feature::Feature, lua::reference::LuaRef, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
+use crate::{action::definition::ActionDef, asset::Asset, common::meta::{HasItemMeta, ItemMeta, enable_meta_methods_for_ref}, error::FreResult, feature::Feature, lua::reference::LuaRef, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
 
 //==============================================================================================
 //        Object

@@ -6,16 +6,17 @@
     
     type Props = { 
       items : Searchable[],
+      results : Searchable[],
       debounce? : number,
       class? : string
     }
     
-    let { items = $bindable(), debounce = 300, 'class' : clazz} : Props = $props();
+    let { items, results = $bindable([]), debounce = 300, 'class' : clazz} : Props = $props();
     let tags : string[] = $state([])
     
     // svelte-ignore state_referenced_locally
     const oninput = debounceOnInput((value) => {
-      items = search(items, value, tags)
+      results = search(items, value, tags)
     }, debounce)
 </script>
 
@@ -24,7 +25,7 @@
     <input 
         {oninput}
         type="text" 
-        class="input-ghost" 
+        class="input-ghost w-full" 
         placeholder="Search..."
     />
 </div>

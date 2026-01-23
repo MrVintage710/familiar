@@ -2,7 +2,7 @@ use std::fs;
 
 use mlua::{FromLuaMulti, Lua};
 use pak_db::{group::Pointer, query::PakQuery};
-use crate::{asset::Asset, constructor::Constructor, error::FreResult, feature::Feature, lua::run_file_with_lua, object::Object, rulebook::Rulebook, stat::{field::{StatBlockField, StatSourceProvider}, statblock::StatBlock, value::StatValue}, test};
+use crate::{asset::Asset, constructor::Constructor, error::FreResult, feature::Feature, lua::{LuaRequireRun, enable_apis, run_file}, object::Object, rulebook::Rulebook, stat::{field::{StatBlockField, StatSourceProvider}, statblock::StatBlock, value::StatValue}, test};
 
 pub const EXAMPLE_RULESET : &'static str = "./rulesets/example-ruleset";
 
@@ -12,8 +12,9 @@ pub const EXAMPLE_RULESET : &'static str = "./rulesets/example-ruleset";
 
 pub fn run_test<R : FromLuaMulti>(file_name : &str) -> FreResult<R> {
     let lua = runtime()?;
+    enable_apis(&lua)?;
     let source = format!("{EXAMPLE_RULESET}/{file_name}.lua");
-    run_file_with_lua(&lua, source)
+    Ok(R::from_lua_multi(run_file(&lua, source, LuaRequireRun)?, &lua)?)
 }
 
 pub fn runtime() -> FreResult<Lua> {
@@ -120,7 +121,7 @@ fn object_ops() {
 fn rulebook() {
     let rulebook = Rulebook::build(EXAMPLE_RULESET).unwrap();
     
-    let constructors = rulebook.file.query::<(Constructor, )>(PakQuery::All).unwrap();
+    let constructors = rulebook.file.query::<(Constructor, Asset)>(PakQuery::All).unwrap();
     
     println!("{constructors:#?}")
     // fs::remove_file(format!("{EXAMPLE_RULESET}/rulebook.pak")).unwrap();
@@ -134,6 +135,16 @@ fn rulebook() {
 fn asset_create() {
     let asset : Asset = run_test("asset_create").unwrap();
     println!("{}", asset.data())
+}
+
+//==============================================================================================
+//        Chracter Test
+//==============================================================================================
+
+#[test]
+fn test_character() {
+    let character : Object = run_test("test_character").unwrap();
+    std::fs::write("test_character.character", bincode::serialize(&character).unwrap()).unwrap();
 }
 
 //==============================================================================================

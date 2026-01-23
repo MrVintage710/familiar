@@ -42,6 +42,15 @@ pub enum FreError {
     #[error("Decode Error: {0}")]
     DecodeError(#[from] DecodeError),
     
+    #[error("Decode Error: {0}")]
+    JsonError(#[from] serde_json::Error),
+    
+    #[error("Pattern Error: {0}")]
+    PatternError(#[from] glob::PatternError),
+    
+    #[error("There was a problem reading '{0}' in the settings file: Wrong type. Expected {1}.")]
+    SettingsVariableTypeMismatch(&'static str, &'static str),
+    
     #[error("There was a problem parsing a dependancy string: {0}")]
     InvalidDepencyString(String),
     
@@ -50,6 +59,9 @@ pub enum FreError {
     
     #[error("Missing the mime type for file extention `{0}`.")]
     MissingMimeType(String),
+    
+    #[error("You cannot register type `{0}`.")]
+    CannotRegisterType(String),
 }
 
 impl Into<mlua::Error> for FreError {

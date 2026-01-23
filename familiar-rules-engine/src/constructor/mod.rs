@@ -3,13 +3,13 @@ use ordermap::OrderMap;
 use pak_db::index::{Indices, PakSearchable};
 use serde::{Deserialize, Serialize};
 
-use crate::{common::{HasItemMeta, ItemMeta, choice::Input, enable_meta_methods}, error::FreResult, lua::reference::LuaRef, object::Object, stat::statblock::StatBlock};
+use crate::{common::{choice::Input, meta::{HasItemMeta, ItemMeta, enable_meta_methods}}, error::FreResult, lua::reference::LuaRef, object::Object, stat::statblock::StatBlock};
 
 //==============================================================================================
 //        
 //==============================================================================================
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Constructor {
     meta : ItemMeta,
     finalize : Option<Vec<u8>>,
