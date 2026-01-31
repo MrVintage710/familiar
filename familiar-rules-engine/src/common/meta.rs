@@ -11,17 +11,17 @@ use crate::{common::identifier::Identifier, lua::reference::LuaRef};
 //        HasItemMeta trait
 //==============================================================================================
 
-pub trait HasItemMeta {
+pub trait HasItemMeta : Sized {
     fn get_meta(&self) -> &ItemMeta;
     
     fn get_meta_mut(&mut self) -> &mut ItemMeta;
     
     fn foriegn_id(&self, rulebook : Uuid) -> Identifier {
-        Identifier::new(self.get_meta().uuid()).from_rulebook(rulebook)
+        Identifier::new::<Self>(self.get_meta().uuid()).from_rulebook(rulebook)
     }
     
     fn id(&self) -> Identifier {
-        Identifier::new(self.get_meta().uuid())
+        Identifier::new::<Self>(self.get_meta().uuid())
     }
 }
 

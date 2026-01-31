@@ -1,23 +1,22 @@
 use std::{collections::{VecDeque}, sync::{Arc, RwLock, Weak}, vec};
 
-use mlua::{FromLua, IntoLua, Lua, MetaMethod, UserData, Value, Variadic};
-use pak_db::index::{Indices, PakSearchable};
+use mlua::{FromLua, Function, IntoLua, Lua, MetaMethod, UserData, Value, Variadic};
+use pak_db::{builder::PakBuilder, error::{PakError, PakResult}, index::{Indices, PakSearchable}, item::{PakItem, PakSerialize}, pointer::PakPointer};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{action::definition::ActionDef, asset::Asset, common::meta::{HasItemMeta, ItemMeta, enable_meta_methods_for_ref}, error::FreResult, feature::Feature, lua::reference::LuaRef, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
+use crate::{action::definition::ActionDef, asset::Asset, common::{identifier::Identifier, meta::{HasItemMeta, ItemMeta, enable_meta_methods_for_ref}}, error::FreResult, feature::Feature, lua::reference::LuaRef, rulebook::value::RulebookValue, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
 
 //==============================================================================================
 //        Object
 //==============================================================================================
 
-#[derive(Default, Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[derive(Default, Clone, PartialEq, Debug)]
 pub struct Object {
     meta : ItemMeta,
     statblock : StatBlock,
     applied_statblock : StatBlock,
-    features : VecDeque<Uuid>,
-    // actions : Vec<Action>,
+    features : VecDeque<RulebookValue<Feature>>,
     assets : Vec<Uuid>
 }
 
@@ -26,15 +25,15 @@ impl Object {
         Object { meta: ItemMeta::new(name, "Object"), statblock: stats.clone(), applied_statblock : stats, features: VecDeque::new(), assets: vec![] }
     }
     
-    pub fn add_features(&mut self, features : VecDeque<&Feature>) {
-        let mut ids = features.iter().map(|feature| feature.get_meta().uuid()).collect::<VecDeque<_>>();
-        self.features.append(&mut ids);
-    }
+    // pub fn add_features(&mut self, features : VecDeque<&Feature>) {
+    //     let mut ids = features.iter().map(|feature| feature.id()).collect::<VecDeque<_>>();
+    //     self.features.append(&mut ids);
+    // }
     
-    pub fn add_assets(&mut self, assets : Vec<&Asset>) {
-        let mut ids = assets.iter().map(|asset| asset.get_meta().uuid()).collect::<Vec<_>>();
-        self.assets.append(&mut ids);
-    }
+    // pub fn add_assets(&mut self, assets : Vec<&Asset>) {
+    //     let mut ids = assets.iter().map(|asset| asset.id()).collect::<Vec<_>>();
+    //     self.assets.append(&mut ids);
+    // }
     
     pub fn stats(&self) -> &StatBlock {
         &self.statblock
@@ -44,9 +43,9 @@ impl Object {
         &mut self.statblock
     }
 
-    pub fn assets(&self) -> &[Uuid] {
-        &self.assets
-    }
+    // pub fn assets(&self) -> &[Identifier] {
+    //     &self.assets
+    // }
     
     // pub fn apply(&self, lua : &Lua) -> VreResult<StatBlock> {
     //     let result = Arc::new(RwLock::new(self.statblock.clone()));
@@ -64,6 +63,12 @@ impl Object {
     //         Err(VreError::MultipleErrors(errors))
     //     }
     // }
+}
+
+impl PakSerialize for Object {
+    fn pak(&self, pak : &mut PakBuilder) -> PakResult<PakPointer> {
+        todo!()
+    }
 }
 
 impl HasItemMeta for Object {
@@ -113,6 +118,26 @@ impl PakSearchable for Object {
 }
 
 //==============================================================================================
+//        StoredObject
+//==============================================================================================
+
+#[derive(Serialize, Deserialize, Default, Clone, PartialEq, Debug)]
+struct StoredObject {
+    pub meta : ItemMeta,
+    pub statblock : StatBlock,
+    pub applied_statblock : StatBlock,
+    pub features : VecDeque<Identifier>,
+    // actions : Vec<Action>,
+    pub assets : Vec<Identifier>
+}
+
+impl StoredObject {
+    fn stucture(self) -> () {
+        
+    }
+}
+
+//==============================================================================================
 //        Lua Object Common Functions
 //==============================================================================================
 
@@ -135,14 +160,16 @@ fn lua_object_index_new(reference : &Arc<RwLock<Object>>, root : &str, key : &st
     Ok(())
 }
 
-fn lua_object_add_features(reference : &Arc<RwLock<Object>>, features : Variadic<Feature>) -> mlua::Result<()> {
+fn lua_object_add_features(lua : &Lua, reference : &Arc<RwLock<Object>>, features : &Variadic<Feature>) -> mlua::Result<()> {
     let Ok(mut object) = reference.write() else { return Ok(()) };
     object.add_features(features.iter().collect());
+    lua.globals().get::<Function>("register").unwrap().call(features);
     Ok(())
 }
 
-fn lua_object_add_assets(reference : &Arc<RwLock<Object>>, assets : Variadic<Asset>) -> mlua::Result<()> {
+fn lua_object_add_assets(lua : &Lua, reference : &Arc<RwLock<Object>>, assets : Variadic<Asset>) -> mlua::Result<()> {
     let Ok(mut object) = reference.write() else { return Ok(()) };
+    
     object.add_assets(assets.iter().collect());
     Ok(())
 }

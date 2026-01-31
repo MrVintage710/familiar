@@ -3066,7 +3066,7 @@ dependencies = [
 
 [[package]]
 name = "pak-db"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "bincode",
  "logos",
@@ -3074,6 +3074,7 @@ dependencies = [
  "serde",
  "sha256",
  "thiserror 2.0.17",
+ "uuid",
 ]
 
 [[package]]

@@ -62,6 +62,9 @@ pub enum FreError {
     
     #[error("You cannot register type `{0}`.")]
     CannotRegisterType(String),
+    
+    #[error("Mismatched type for identifier. Found type '{0}', expect type '{1}'")]
+    IdentifierTypeMismatch(String, String),
 }
 
 impl Into<mlua::Error> for FreError {

@@ -1,3 +1,5 @@
+pub mod value;
+
 use std::{collections::HashMap, path::{Path, PathBuf}};
 
 use glob::glob;
