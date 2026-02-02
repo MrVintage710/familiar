@@ -6,7 +6,7 @@ pub mod reference;
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use mlua::{AppDataRefMut, AsChunk, ExternalResult, FromLuaMulti, IntoLuaMulti, Lua, MultiValue};
 use serde::ser::Error;
-use crate::{action::enable_actions, asset::enable_assets, common::identifier::Identifier, constructor::enable_constructor, error::{FreException, FreResult}, feature::enable_features, lua::iter::enable_iter, object::enable_objects, rulebook::RulebookSettings, stat::{enable_stats, query::enable_query}};
+use crate::{action::enable_actions, asset::enable_assets, common::identifier::Identifier, constructor::enable_constructor, error::{FreException, FreResult}, feature::enable_features, lua::iter::enable_iter, object::enable_objects, rulebook::{RulebookSettings, registry::enable_regisrty}, stat::{enable_stats, query::enable_query}};
 
 //==============================================================================================
 //        Functions for running lua
@@ -67,6 +67,7 @@ pub(crate) fn enable_apis(lua : &Lua) -> FreResult<()> {
     enable_query(lua)?;
     enable_constructor(lua)?;
     enable_assets(lua)?;
+    enable_regisrty(lua)?;
     Ok(())
 }
 

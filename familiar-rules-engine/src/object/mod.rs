@@ -1,11 +1,11 @@
-use std::{collections::{VecDeque}, sync::{Arc, RwLock, Weak}, vec};
+use std::{borrow::Cow, collections::VecDeque, sync::{Arc, PoisonError, RwLock, RwLockReadGuard, Weak}, vec};
 
-use mlua::{FromLua, Function, IntoLua, Lua, MetaMethod, UserData, Value, Variadic};
-use pak_db::{builder::PakBuilder, error::{PakError, PakResult}, index::{Indices, PakSearchable}, item::{PakItem, PakSerialize}, pointer::PakPointer};
-use serde::{Deserialize, Serialize};
+use mlua::{ExternalResult, FromLua, Function, IntoLua, Lua, MetaMethod, UserData, UserDataRef, Value, Variadic};
+use pak_db::{builder::PakBuilder, error::{PakError, PakResult}, index::{Indices, PakSearchable}, item::{PakSerialize}, pointer::PakPointer};
+use serde::{Deserialize, Serialize, ser::Error};
 use uuid::Uuid;
 
-use crate::{action::definition::ActionDef, asset::Asset, common::{identifier::Identifier, meta::{HasItemMeta, ItemMeta, enable_meta_methods_for_ref}}, error::FreResult, feature::Feature, lua::reference::LuaRef, rulebook::value::RulebookValue, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
+use crate::{action::definition::ActionDef, asset::Asset, common::{identifier::Identifier, meta::{HasItemMeta, ItemMeta, enable_meta_methods_for_ref}}, error::FreResult, feature::Feature, lua::reference::LuaRef, rulebook::{registry::RulebookRegistry, value::RulebookValue}, stat::{field::{StatBlockField, StatSourceProvider}, statblock::{StatBlock, StatBlockPath}, value::StatValue}};
 
 //==============================================================================================
 //        Object
@@ -16,8 +16,8 @@ pub struct Object {
     meta : ItemMeta,
     statblock : StatBlock,
     applied_statblock : StatBlock,
-    features : VecDeque<RulebookValue<Feature>>,
-    assets : Vec<Uuid>
+    features : VecDeque<Feature>,
+    assets : Vec<Asset>
 }
 
 impl Object {
@@ -65,9 +65,31 @@ impl Object {
     // }
 }
 
+#[derive(Serialize, Deserialize)]
+struct SerializedObject<'a> {
+    #[serde(borrow)]
+    meta : Cow<'a, ItemMeta>,
+    #[serde(borrow)]
+    statblock : Cow<'a, StatBlock>,
+    features : VecDeque<Identifier>,
+    assets : Vec<Identifier>
+}
+
 impl PakSerialize for Object {
     fn pak(&self, pak : &mut PakBuilder) -> PakResult<PakPointer> {
-        todo!()
+        let assets = self.assets.iter().map(|asset| { pak.pak(asset); asset.id() }).collect::<Vec<_>>();
+        let features = self.features.iter().map(|feature| { pak.pak(feature); feature.id() }).collect::<VecDeque<_>>();
+        
+        let serialized_obj = SerializedObject {
+            meta: Cow::Borrowed(&self.meta),
+            statblock: Cow::Borrowed(&self.statblock),
+            features,
+            assets
+        };
+        
+        let mut indices = Indices::default();
+        self.get_indices(&mut indices);
+        pak.pak_serde(&serialized_obj, indices)
     }
 }
 
@@ -118,26 +140,6 @@ impl PakSearchable for Object {
 }
 
 //==============================================================================================
-//        StoredObject
-//==============================================================================================
-
-#[derive(Serialize, Deserialize, Default, Clone, PartialEq, Debug)]
-struct StoredObject {
-    pub meta : ItemMeta,
-    pub statblock : StatBlock,
-    pub applied_statblock : StatBlock,
-    pub features : VecDeque<Identifier>,
-    // actions : Vec<Action>,
-    pub assets : Vec<Identifier>
-}
-
-impl StoredObject {
-    fn stucture(self) -> () {
-        
-    }
-}
-
-//==============================================================================================
 //        Lua Object Common Functions
 //==============================================================================================
 
@@ -160,17 +162,19 @@ fn lua_object_index_new(reference : &Arc<RwLock<Object>>, root : &str, key : &st
     Ok(())
 }
 
-fn lua_object_add_features(lua : &Lua, reference : &Arc<RwLock<Object>>, features : &Variadic<Feature>) -> mlua::Result<()> {
+fn lua_object_add_features(reference : &Arc<RwLock<Object>>, features : Variadic<Feature>) -> mlua::Result<()> {
     let Ok(mut object) = reference.write() else { return Ok(()) };
-    object.add_features(features.iter().collect());
-    lua.globals().get::<Function>("register").unwrap().call(features);
+    for feature in features.into_iter() {
+        object.features.push_back(feature);
+    }
     Ok(())
 }
 
-fn lua_object_add_assets(lua : &Lua, reference : &Arc<RwLock<Object>>, assets : Variadic<Asset>) -> mlua::Result<()> {
+fn lua_object_add_assets(reference : &Arc<RwLock<Object>>, assets : Variadic<Asset>) -> mlua::Result<()> {
     let Ok(mut object) = reference.write() else { return Ok(()) };
-    
-    object.add_assets(assets.iter().collect());
+    for asset in assets.into_iter() {
+        object.assets.push(asset);
+    }
     Ok(())
 }
 
@@ -193,13 +197,19 @@ fn lua_stat_set(lua : &Lua, reference : &Arc<RwLock<Object>>, root : &str, value
 
 pub struct LuaObject(Arc<RwLock<Object>>);
 
+impl LuaObject {
+    pub fn read(&self, ) -> Result<RwLockReadGuard<'_, Object>, PoisonError<RwLockReadGuard<'_, Object>>> {
+        self.0.read()
+    }
+}
+
 impl UserData for LuaObject {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method("add_features", |_, this, features : Variadic<Feature>| {
+        methods.add_method("add_features", |_lua, this, features : Variadic<Feature>| {
             lua_object_add_features(&this.0, features)
         });
         
-        methods.add_method("add_assets", |_, this, assets : Variadic<Asset>| {
+        methods.add_method("add_assets", |_lua, this, assets : Variadic<Asset>| {
             lua_object_add_assets(&this.0, assets)
         });
         
@@ -234,12 +244,12 @@ impl UserData for LuaObjectRef {
         
         methods.add_method("add_features", |_lua, this, features : Variadic<Feature>| {
             let Some(object) = this.0.upgrade() else { return Ok(()) };
-            lua_object_add_features( &object, features)
+            lua_object_add_features(&object, features)
         });
         
         methods.add_method("add_assets", |_lua, this, assets : Variadic<Asset>| {
             let Some(object) = this.0.upgrade() else { return Ok(()) };
-            lua_object_add_assets( &object, assets)
+            lua_object_add_assets(&object, assets)
         });
         
         methods.add_method("add_actions", |_lua, this, actions : Variadic<ActionDef>| {

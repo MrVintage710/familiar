@@ -2,7 +2,7 @@
 -- Typically, there will be files here that share names with tests in the tests.rs file. Other code that is used
 -- in all of the tests are in the common folder.
 
-local constructor = require("constructor_create");
+local obj = require("object_ops")
 
-register(constructor)
 register(asset("Profile", "owl.jpg"))
+register(obj)

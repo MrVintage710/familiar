@@ -1,13 +1,14 @@
 pub mod value;
+pub mod registry;
 
 use std::{collections::HashMap, path::{Path, PathBuf}};
 
 use glob::glob;
-use mlua::{AnyUserData, ExternalResult, Lua};
+use mlua::{AnyUserData, ExternalResult, Lua, UserDataRef};
 use pak_db::{builder::PakBuilder, Pak};
 use serde::{Deserialize, Serialize, ser::Error};
 use uuid::Uuid;
-use crate::{asset::Asset, common::{deps::RulebookDependency, identifier::Identifier, meta::HasItemMeta}, constructor::Constructor, error::{BuildError, FreError, FreResult}, feature::Feature, lua::{LuaDepsRun, LuaRequireRun, LuaSourceMeta, enable_apis, run_file}, object::Object};
+use crate::{asset::Asset, common::{deps::RulebookDependency, identifier::Identifier, meta::HasItemMeta}, constructor::Constructor, error::{BuildError, FreError, FreResult}, feature::Feature, lua::{LuaDepsRun, LuaRequireRun, LuaSourceMeta, enable_apis, run_file}, object::Object, rulebook::registry::RulebookRegistry};
 
 const BUILD_SCRIPT_NAME: &str = "familiar.config.json";
 
@@ -68,45 +69,6 @@ impl Rulebook {
         let pak_path = path.clone().join(format!("{}-{}.rulebook", settings.name.to_lowercase().replace(" ", "-"), settings.version));
         let pak = pakker.build_file(&pak_path)?;
         return Ok(Rulebook { settings, file: pak });
-        
-        // let build_src = LuaSource::new(&build_file_path)?;
-        
-        
-        // Set default globals to set
-        // lua.globals().set("name", "rulebook")?;
-        // lua.globals().set("version", "1.0.0")?;
-        // lua.globals().set("game_system", "unknown")?;
-        // lua.globals().set("deps", Vec::<String>::new())?;
-        
-        
-        
-        //Add the pak builder so that the file will be built
-        
-        // lua.globals().set("register_feature", lua.create_function(|lua : &Lua, feature : FeatureDef| {
-        //     if let Some(mut pak_builder) = lua.app_data_mut::<PakBuilder>() {
-        //         pak_builder.pak(feature).expect("Error while building feature.");
-        //     }
-        //     return Ok(Value::Nil);
-        // })?)?;
-        
-        //Run the build script
-        // run_file_with_lua::<Value>(&lua, build_file_path)?;
-        
-        //Meta Variables
-        // let name : String = lua.globals().get("name").unwrap();
-        // let version : String = lua.globals().get("version").unwrap();
-        // let game_system : String = lua.globals().get("game_system").unwrap();
-        // let deps : Vec<RulebookDependency> = lua.globals().get("deps").unwrap();
-        
-        // //Remove the pak builder after use
-        // let mut pak_builder = lua.remove_app_data::<PakBuilder>().unwrap();
-        
-        // let pak_path = path.clone().join(format!("{}-{version}.rulebook", name.to_lowercase().replace(" ", "-")));
-        // pak_builder.set_version(version);
-        // pak_builder.set_name(&name);
-        // pak_builder.set_extra(&RulebookMeta { game_system, deps })?;
-        // let pak = pak_builder.build_file(pak_path)?;
-        // return Ok(Rulebook { name, file: pak });
     }
 }
 
@@ -152,60 +114,6 @@ impl RulebookSettings {
     
     pub fn uuid(&self) -> Uuid {
         Uuid::new_v5(&Uuid::NAMESPACE_X500, format!("{}|{}", self.name, self.version).as_bytes())
-    }
-}
-
-//==============================================================================================
-//        Build References
-//==============================================================================================
-
-#[derive(Default)]
-pub struct RulebookRegistry {
-    pub objects : HashMap<Uuid, Object>,
-    pub features : HashMap<Uuid, Feature>,
-    pub assets : HashMap<Uuid, Asset>,
-    pub constructors : HashMap<Uuid, Constructor>,
-}
-
-impl RulebookRegistry {
-    fn explode(self) -> (HashMap<Uuid, Object>, HashMap<Uuid, Feature>, HashMap<Uuid, Asset>, HashMap<Uuid, Constructor>) {
-        (self.objects, self.features, self.assets, self.constructors)
-    }
-    
-    fn register(&mut self, user_data : AnyUserData) -> FreResult<Identifier> {
-        if let Ok(object) = user_data.borrow::<Object>() {
-            let uuid = object.get_meta().uuid();
-            if !self.objects.contains_key(&uuid) {
-                self.objects.insert(uuid, object.clone());
-            }
-            return Ok(object.id());
-        }
-        
-        if let Ok(feature) = user_data.borrow::<Feature>() {
-            let uuid = feature.get_meta().uuid();
-            if !self.features.contains_key(&uuid) {
-                self.features.insert(uuid, feature.clone());
-            }
-            return Ok(feature.id());
-        }
-        
-        if let Ok(asset) = user_data.borrow::<Asset>() {
-            let uuid = asset.get_meta().uuid();
-            if !self.assets.contains_key(&uuid) {
-                self.assets.insert(uuid, asset.clone());
-            }
-            return Ok(asset.id());
-        }
-        
-        if let Ok(constructor) = user_data.borrow::<Constructor>() {
-            let uuid = constructor.get_meta().uuid();
-            if !self.constructors.contains_key(&uuid) {
-                self.constructors.insert(uuid, constructor.clone());
-            }
-            return Ok(constructor.id());
-        }
-        
-        Err(FreError::CannotRegisterType(user_data.type_name().unwrap().unwrap()))
     }
 }
 
