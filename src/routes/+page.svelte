@@ -1,24 +1,25 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
-  import CharacterAvatar from "@components/CharacterAvatar.svelte";
   import SearchBar from "@components/SearchBar.svelte";
   import { Plus } from "@lucide/svelte";
+  import { getRulesetList } from "$lib/rulebook";
+  import FetchArea from "@components/FetchArea.svelte";
+  import RulesetCard from "@components/RulesetCard.svelte";
   
   let results = $state([]);
-  
-  // invoke("get_available_game_systems").then((data) => console.log("From backend: ", data));
 </script>
 
-<div class="w-full flex flex-col p-4">
-  <div class="flex gap-4 justify-center items-center ">
+<div class="w-full flex flex-col ">
+  <div class="flex gap-4 justify-center items-center p-4">
     <SearchBar items={[]} bind:results={results} class="w-full"/>
-    <button type="button" class="btn preset-filled-primary-100-900 h-12">
-      <span class="">New</span>
-      <Plus class="stroke-primary-500"/> 
-    </button>
   </div>
   <!-- Character List -->
-  <div class="w-full min-h-32">
-    
+  <div class="w-full h-full">
+    <FetchArea callback={getRulesetList} class="w-full h-full px-4 pb-4">
+      {#snippet done(rulesets)}
+        {#each rulesets as ruleset}
+          <RulesetCard {ruleset}/>
+        {/each}
+      {/snippet}
+    </FetchArea>
   </div>
 </div>

@@ -13,7 +13,8 @@ const config = {
       fallback: "index.html",
     }),
     alias: {
-      "@components": "src/components"
+      "@components": "src/components",
+      "@assets" : "src/assets"
     }
   },
 };

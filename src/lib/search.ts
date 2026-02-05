@@ -1,6 +1,5 @@
 import fuzzysearch from "fuzzysearch-ts"
 
-
 export type Searchable = {
   tags: string[],
   name: string

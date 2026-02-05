@@ -9,7 +9,7 @@ use crate::{error::FreError, prelude::Rulebook};
 //        RulebookDependency
 //==============================================================================================
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RulebookDependency {
     rulebook: String,
     version: String,

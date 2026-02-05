@@ -23,15 +23,16 @@ local function default (a, b)
 end
 
 ---@param options Options
-local function create_character(options)
+function create_character(options)
     local level = stat(default(options.level, 1))
     local might = stat(default(options.might, 1));
     local magic = stat(default(options.magic, 1));
     local mechanics = stat(default(options.mechanics, 1));
 
-    local arcana = stat(default(options.ranks.arcana, 1));
-    local athletics = stat(default(options.ranks.athletics, 1));
-    local acadamia = stat(default(options.ranks.acadamia, 1));
+    local ranks = default(options.ranks, {arcana = 1, athletics = 1, acadamia = 1});
+    local arcana = stat(default(ranks.arcana, 1));
+    local athletics = stat(default(ranks.athletics, 1));
+    local acadamia = stat(default(ranks.acadamia, 1));
 
     local arcana_modifier = derive({ level, magic, arcana }, function(level, magic, arcana)
         return level + magic + arcana
@@ -58,5 +59,3 @@ local function create_character(options)
         acadamia_modifier = acadamia_modifier
     })
 end
-
-return create_character

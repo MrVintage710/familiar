@@ -7,6 +7,21 @@
 
 @plugin '@tailwindcss/forms';
 
+@font-face {
+    font-family: 'aleo';
+    src: url('./assets/fonts/Aleo-Regular.otf') format('otf');
+}
+
+@font-face {
+    font-family: 'taroca';
+    src: url('@assets/fonts/Taroca Regular.ttf') format('ttf');
+}
+
+@theme {
+    --font-taroca: taroca;
+    --font-aleo: aleo, inherit;
+}
+
 .select,
 .input,
 .textarea,
@@ -14,4 +29,9 @@
 .ig-select {
 	background-color: var(--color-surface-50-950);
 	color: var(--color-surface-950-50);
+}
+
+.darken {
+  box-sizing: border-box;
+  box-shadow: inset 0 0 800px 0px black;
 }

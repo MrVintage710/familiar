@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::VecDeque, sync::{Arc, PoisonError, RwLock, RwLockReadGuard, Weak}, vec};
 
 use mlua::{ExternalResult, FromLua, Function, IntoLua, Lua, MetaMethod, UserData, UserDataRef, Value, Variadic};
-use pak_db::{builder::PakBuilder, error::{PakError, PakResult}, index::{Indices, PakSearchable}, item::{PakSerialize}, pointer::PakPointer};
+use pak_db::{Pak, builder::PakBuilder, error::{PakError, PakResult}, index::{Indices, PakIndexIdentifier, PakSearchable}, item::{PakDeserialize, PakSerialize}, pointer::PakPointer};
 use serde::{Deserialize, Serialize, ser::Error};
 use uuid::Uuid;
 
@@ -66,11 +66,9 @@ impl Object {
 }
 
 #[derive(Serialize, Deserialize)]
-struct SerializedObject<'a> {
-    #[serde(borrow)]
-    meta : Cow<'a, ItemMeta>,
-    #[serde(borrow)]
-    statblock : Cow<'a, StatBlock>,
+struct SerializedObject {
+    meta : ItemMeta,
+    statblock : StatBlock,
     features : VecDeque<Identifier>,
     assets : Vec<Identifier>
 }
@@ -81,8 +79,8 @@ impl PakSerialize for Object {
         let features = self.features.iter().map(|feature| { pak.pak(feature); feature.id() }).collect::<VecDeque<_>>();
         
         let serialized_obj = SerializedObject {
-            meta: Cow::Borrowed(&self.meta),
-            statblock: Cow::Borrowed(&self.statblock),
+            meta: self.meta.clone(),
+            statblock: self.statblock.clone(),
             features,
             assets
         };
@@ -90,6 +88,23 @@ impl PakSerialize for Object {
         let mut indices = Indices::default();
         self.get_indices(&mut indices);
         pak.pak_serde(&serialized_obj, indices)
+    }
+}
+
+impl PakDeserialize for Object {
+    fn unpak(pak : &Pak, pointer : &PakPointer) -> PakResult<Self> {
+        let serialized_object = pak.read_serde::<SerializedObject>(pointer)?;
+        let assets = serialized_object.assets.iter()
+            .filter_map(|asset| pak.query::<(Asset, )>("uuid".equals(asset.uuid())).ok())
+            .flatten()
+            .collect::<Vec<_>>()
+        ;
+        let features = serialized_object.features.iter()
+            .filter_map(|feature| pak.query::<(Feature, )>("uuid".equals(feature.uuid())).ok())
+            .flatten()
+            .collect::<VecDeque<_>>()
+        ;
+        Ok(Object { meta: serialized_object.meta, statblock: serialized_object.statblock.clone(), applied_statblock: serialized_object.statblock, features, assets })
     }
 }
 

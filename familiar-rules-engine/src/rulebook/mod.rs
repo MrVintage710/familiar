@@ -1,23 +1,30 @@
 pub mod value;
 pub mod registry;
 
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use std::{path::{Path, PathBuf}, str::FromStr};
 
 use glob::glob;
-use mlua::{AnyUserData, ExternalResult, Lua, UserDataRef};
+use mlua::{AnyUserData, ExternalResult, Lua};
 use pak_db::{builder::PakBuilder, Pak};
 use serde::{Deserialize, Serialize, ser::Error};
 use uuid::Uuid;
-use crate::{asset::Asset, common::{deps::RulebookDependency, identifier::Identifier, meta::HasItemMeta}, constructor::Constructor, error::{BuildError, FreError, FreResult}, feature::Feature, lua::{LuaDepsRun, LuaRequireRun, LuaSourceMeta, enable_apis, run_file}, object::Object, rulebook::registry::RulebookRegistry};
+use crate::{asset::Asset, common::{deps::RulebookDependency, util::string_or_struct}, error::{BuildError, FreError, FreResult}, lua::{LuaDepsRun, LuaRequireRun, enable_apis, run_file}, rulebook::registry::RulebookRegistry};
 
 const BUILD_SCRIPT_NAME: &str = "familiar.config.json";
 
 pub struct Rulebook {
-    settings : RulebookSettings,
-    pub file : Pak
+    pub settings : RulebookMeta,
+    pub pak : Pak
 }
 
 impl Rulebook {
+    
+    pub fn from_file(path : impl AsRef<Path>) -> FreResult<Self> {
+        let pak = Pak::new_from_file(path)?;
+        let settings = pak.get_extra::<RulebookMeta>()?;
+        Ok(Rulebook { settings, pak })
+    }
+    
     /// This function runs the build file at the given folder path.
     pub fn build(path : impl AsRef<Path>) -> FreResult<Self> {
         //Make path buf
@@ -59,7 +66,14 @@ impl Rulebook {
             .with_author(settings.authors.as_ref().unwrap_or(&vec![]).join(", ").as_str())
         ;
         
-        pakker.set_extra(&RulebookMeta { game_system : settings.ttrpg.clone(), deps : vec![] })?;
+        let cover = if let Some(cover) = settings.cover.clone() {
+            Some(Asset::load(&format!("{} Cover", settings.name), path.join(cover))?)
+        } else {
+            None
+        };
+        
+        let extra = RulebookMeta { ruleset : settings.ruleset.clone(), deps : vec![], cover };
+        pakker.set_extra(&extra)?;
         
         for (_, item) in objects.into_iter() { pakker.pak(&item)?; }
         for (_, item) in features.into_iter() { pakker.pak(&item)?; }
@@ -68,7 +82,7 @@ impl Rulebook {
         
         let pak_path = path.clone().join(format!("{}-{}.rulebook", settings.name.to_lowercase().replace(" ", "-"), settings.version));
         let pak = pakker.build_file(&pak_path)?;
-        return Ok(Rulebook { settings, file: pak });
+        return Ok(Rulebook { settings : extra, pak });
     }
 }
 
@@ -80,7 +94,9 @@ impl Rulebook {
 pub struct RulebookSettings {
     name : String,
     version : String,
-    ttrpg : String,
+    #[serde(deserialize_with = "string_or_struct")]
+    ruleset : RulesetInfo,
+    cover : Option<String>,
     description : Option<String>,
     authors : Option<Vec<String>>,
     include : Option<Vec<String>>
@@ -115,14 +131,71 @@ impl RulebookSettings {
     pub fn uuid(&self) -> Uuid {
         Uuid::new_v5(&Uuid::NAMESPACE_X500, format!("{}|{}", self.name, self.version).as_bytes())
     }
+
+    pub fn ruleset(&self) -> &RulesetInfo {
+        &self.ruleset
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn version(&self) -> &str {
+        &self.version
+    }
+
+    pub fn cover(&self) -> Option<&String> {
+        self.cover.as_ref()
+    }
+
+    pub fn description(&self) -> Option<&String> {
+        self.description.as_ref()
+    }
+
+    pub fn authors(&self) -> Option<&Vec<String>> {
+        self.authors.as_ref()
+    }
+
+    pub fn include(&self) -> Option<&Vec<String>> {
+        self.include.as_ref()
+    }
+}
+
+//==============================================================================================
+//        Ruleset Info
+//==============================================================================================
+
+#[derive(Debug, Deserialize, Serialize, Default, Clone)]
+pub struct RulesetInfo {
+    title : String,
+    short : Option<String>
+}
+
+impl RulesetInfo {
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    pub fn short(&self) -> Option<&String> {
+        self.short.as_ref()
+    }
+}
+
+impl FromStr for RulesetInfo {
+    type Err = FreError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(RulesetInfo { title: s.to_string(), ..Default::default()})
+    }
 }
 
 //==============================================================================================
 //        RulebookMeta
 //==============================================================================================
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct RulebookMeta {
-    pub game_system : String,
-    pub deps : Vec<RulebookDependency>
+    pub ruleset : RulesetInfo,
+    pub deps : Vec<RulebookDependency>,
+    pub cover : Option<Asset>
 }

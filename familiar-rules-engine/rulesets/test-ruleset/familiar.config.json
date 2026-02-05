@@ -1,5 +1,9 @@
 {
   "name" : "Test Rulebook",
   "version" : "1.0.0",
-  "ttrpg" : "Totally Real System"
+  "ruleset" : {
+    "title" : "Totally Real Ruleset",
+    "short" : "trr"
+  },
+  "cover" : "./pf2e_core_cover.jpg"
 }

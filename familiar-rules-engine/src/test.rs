@@ -5,6 +5,7 @@ use pak_db::query::PakQuery;
 use crate::{asset::Asset, constructor::Constructor, error::FreResult, feature::Feature, lua::{LuaRequireRun, enable_apis, run_file}, object::Object, rulebook::Rulebook, stat::{field::{StatBlockField, StatSourceProvider}, statblock::StatBlock, value::StatValue}};
 
 pub const EXAMPLE_RULESET : &'static str = "./rulesets/example-ruleset";
+pub const TEST_RULESET : &'static str = "./rulesets/test-ruleset";
 
 //==============================================================================================
 //        Helper functions
@@ -119,9 +120,9 @@ fn object_ops() {
 
 #[test]
 fn rulebook() {
-    let rulebook = Rulebook::build(EXAMPLE_RULESET).unwrap();
+    let rulebook = Rulebook::build(TEST_RULESET).unwrap();
     
-    let constructors = rulebook.file.query::<(Constructor, Asset)>(PakQuery::All).unwrap();
+    let constructors = rulebook.pak.query::<(Object, Constructor)>(PakQuery::All).unwrap();
     
     println!("{constructors:#?}")
     // fs::remove_file(format!("{EXAMPLE_RULESET}/rulebook.pak")).unwrap();

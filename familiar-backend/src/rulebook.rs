@@ -1,6 +1,6 @@
 use std::{collections::HashSet, fs::DirEntry, path::PathBuf};
 
-use fre::rulebook::RulebookMeta;
+use fre::{asset::Asset, prelude::Rulebook, rulebook::{RulebookMeta, RulesetInfo}};
 use pak_db::meta::PakMeta;
 
 use crate::error::{FamiliarError, FamiliarResult};
@@ -26,6 +26,21 @@ pub fn get_rulebook_list() -> FamiliarResult<Vec<PathBuf>> {
     Ok(paths)
 }
 
+pub fn get_rulebooks_in_rulesets(ruleset : &str) -> FamiliarResult<Vec<Rulebook>> {
+    let rulebooks = get_rulebook_list()?
+        .into_iter()
+        .inspect(|path| println!("{path:?}"))
+        .filter_map(|rulebook_path| Rulebook::from_file(rulebook_path).ok())
+        .inspect(|path| println!("{:?}", path.settings))
+        .filter(|rulebook| {
+            if rulebook.settings.ruleset.short().is_some() && rulebook.settings.ruleset.short().unwrap() == ruleset {return true}
+            rulebook.settings.ruleset.title() == ruleset
+        })
+        .collect::<Vec<_>>()
+    ;
+    Ok(rulebooks)
+}
+
 #[tauri::command]
 pub fn get_meta_list() -> FamiliarResult<Vec<PakMeta>> {
     Ok(get_rulebook_list()?.into_iter()
@@ -34,13 +49,42 @@ pub fn get_meta_list() -> FamiliarResult<Vec<PakMeta>> {
 }
 
 #[tauri::command]
-pub fn get_available_game_systems() -> FamiliarResult<Vec<String>> {
-    let mut game_systems = HashSet::<String>::new();
-    
-    get_meta_list()?
+pub fn get_rulebook_settings() -> FamiliarResult<Vec<RulebookMeta>> {
+    let list = get_meta_list()?
         .iter()
         .filter_map(|meta| meta.get_extra::<RulebookMeta>().ok())
-        .for_each(|extra| { game_systems.insert(extra.game_system); });
+        .collect::<Vec<_>>()
+    ;
     
-    Ok(game_systems.into_iter().collect())
+    Ok(list)
+}
+
+#[tauri::command]
+pub fn get_available_rulesets() -> FamiliarResult<Vec<RulesetInfo>> {
+    let mut game_systems = HashSet::<String>::new();
+    let list = get_meta_list()?
+        .iter()
+        .filter_map(|meta| meta.get_extra::<RulebookMeta>().ok())
+        .filter_map(|extra| {
+            let title = extra.ruleset.title();
+            if game_systems.contains(title) { return None }
+            game_systems.insert(title.to_string());
+            return Some(extra.ruleset);
+        })
+        .collect::<Vec<_>>()
+    ;
+    
+    Ok(list)
+}
+
+#[tauri::command]
+pub fn get_available_covers_for_ruleset(ruleset : &str) -> FamiliarResult<Vec<Asset>> {
+    let covers = get_rulebooks_in_rulesets(ruleset)?
+        .into_iter()
+        .inspect(|rulebook| println!("Testing {:?}", rulebook.settings))
+        .filter_map(|rulebook| rulebook.settings.cover)
+        .collect::<Vec<_>>()
+    ;
+    
+    Ok(covers)
 }
