@@ -1,13 +1,11 @@
 <script lang="ts">
-    import Navbar from '@components/Navbar.svelte';
+  import AppShell from '@components/AppShell.svelte';
 
-  
-  
   let { children } = $props();
   import("../style.css")
 </script>
 
 
-<Navbar>
+<AppShell>
   {@render children()}
-</Navbar>
+</AppShell>

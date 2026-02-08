@@ -13,13 +13,11 @@
     <SearchBar items={[]} bind:results={results} class="w-full"/>
   </div>
   <!-- Character List -->
-  <div class="w-full h-full">
-    <FetchArea callback={getRulesetList} class="w-full h-full px-4 pb-4">
-      {#snippet done(rulesets)}
-        {#each rulesets as ruleset}
-          <RulesetCard {ruleset}/>
-        {/each}
-      {/snippet}
-    </FetchArea>
-  </div>
+  <FetchArea callback={getRulesetList} class="w-full h-full px-4 pb-4 flex justify-center">
+    {#snippet done(rulesets)}
+      {#each rulesets as ruleset}
+        <RulesetCard {ruleset}/>
+      {/each}
+    {/snippet}
+  </FetchArea>
 </div>

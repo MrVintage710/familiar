@@ -1,27 +1,11 @@
 <script lang="ts">
-  import { ArrowLeftRightIcon, BikeIcon, BookIcon, HouseIcon, TreePalmIcon, UserIcon } from '@lucide/svelte';
-	import { Navigation } from '@skeletonlabs/skeleton-svelte';
-	import { page } from '$app/state';
-  
-	const links = [
-		{ label: 'Characters', href: '/', icon: UserIcon },
-	];
-  
-	const buttonClasses = 'btn hover:preset-tonal';
-	let anchorRail = `${buttonClasses} aspect-square w-full max-w-[84px] flex flex-col items-center gap-0.5`;
-	let anchorSidebar = `${buttonClasses} justify-start px-2 w-full`;
-  
-	let layoutRail = $state(true);
-  
-	function toggleLayout() {
-		layoutRail = !layoutRail;
-	}
+  import Navbar from './navbar/Navbar.svelte';
   
   let { children } = $props();
 </script>
 
 <div class="w-full h-screen grid grid-cols-[auto_1fr] items-stretch">
-  <Navigation layout={layoutRail ? 'rail' : 'sidebar'} class={[layoutRail ? '' : 'grid grid-rows-[1fr_auto] gap-4', '']}>
+  <!-- <Navigation layout={layoutRail ? 'rail' : 'sidebar'} class={[layoutRail ? '' : 'grid grid-rows-[1fr_auto] gap-4', '']}>
 		<Navigation.Content>
 			<Navigation.Header>
 				<Navigation.Trigger onclick={toggleLayout}>
@@ -39,6 +23,7 @@
 				{/each}
 			</Navigation.Menu>
 		</Navigation.Content>
-	</Navigation>
+	</Navigation> -->
+	<Navbar />
   {@render children()}
 </div>
