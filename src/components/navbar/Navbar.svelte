@@ -1,6 +1,7 @@
 <script lang="ts" module>
   import NavbarItem from "./NavbarItem.svelte";
   import { Users, BookCopy, House } from "@lucide/svelte";
+  import { getCurrentPage, getPageList, pages } from "$lib/PageState.svelte";
   
   export type Props = {
     width? : number,
@@ -11,11 +12,12 @@
 </script>
 
 <script lang="ts">
-  
+    import { getShortcutList } from "$lib/PageState.svelte";
+
   let {
     width = $bindable(240),
-    minWidth = 125,
-    maxWidth = 290,
+    minWidth = 130,
+    maxWidth = 310,
   } : Props = $props()
   
   //==============================================================================================
@@ -59,11 +61,13 @@
     class={["absolute right-0 h-full hover:border-r-2 hover:border-secondary-500 w-2.5 -mt-2 hover:cursor-ew-resize focus:outline-none", isDragging && "border-r-2 border-secondary-500 cursor-ew-resize"]}
   />
   <div class="flex flex-wrap justify-start gap-1 h-fit border-b-2 border-primary-500 pb-4 w-full">
-    <NavbarItem title="Home" expanded={false} icon={ House } />
-    <NavbarItem title="Characters" expanded={false} selected={true} icon={ Users } />
-    <NavbarItem title="Rulebooks" expanded={false} icon={ BookCopy } />
+    {#each getShortcutList() as shortcut }
+      <NavbarItem linkedPage={shortcut} expanded={false} />
+    {/each}
   </div>
-  <NavbarItem title="Barabrass the Mighty sdf f sddf sfsdf asdfsdf"></NavbarItem>
+  {#each getPageList() as page}
+    <NavbarItem linkedPage={page} />
+  {/each}
 </nav>
 
 <!-- {#snippet Trigger(title : string, icon : Component<IconProps>)}

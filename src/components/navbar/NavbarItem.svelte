@@ -1,53 +1,68 @@
 <script lang="ts" module>
-  import { CircleQuestionMark, type IconProps } from "@lucide/svelte";
-    import { Portal, Tooltip, type TooltipRootProps } from "@skeletonlabs/skeleton-svelte";
-  import type { Component, Snippet } from "svelte";
+  import { Portal, Tooltip, type TooltipRootProps } from "@skeletonlabs/skeleton-svelte";
+  import { getCurrentPage, gotoPage, removePage, type Page } from "$lib/PageState.svelte";
+  import PageLink from "./PageLink.svelte";
 
   export type Props = {
-    icon? : Component<IconProps>,
     selected? : boolean,
     tooltipOptions? : TooltipRootProps,
     expanded? : boolean
-    title? : string
-    subtitle? : string
+    linkedPage : Page
   }
 </script>
 
 <script lang="ts">
+    import { X } from "@lucide/svelte";
+    import { render } from "svelte/server";
+
+
   const {
-    icon : Icon = CircleQuestionMark,
     selected = false,
     expanded = true,
-    title,
-    subtitle,
-    tooltipOptions
+    tooltipOptions,
+    linkedPage
   } : Props = $props()
   const height = () => expanded ? 12 : 32;
 </script>
 
-<Tooltip {...tooltipOptions}>
-	<Tooltip.Trigger>
-    <div class={["flex items-center gap-2 rounded-lg p-1", expanded ? "w-full" : "w-fit", !selected || "border-2 border-primary-500"]}>
-      <Icon size={height() + 12} class="stroke-primary-500 shrink-0 grow-0"/>
-      {#if expanded}
-        <div class="truncate text-ellipsis w-full"> {title} </div>
-      {/if}
-    </div>
-	</Tooltip.Trigger>
-	{#if !expanded}
-  	<Portal>
-  		<Tooltip.Positioner>
-  			<Tooltip.Content class="card preset-filled-primary-900-100 p-2 shadow-xl">
-  			  {title}
-  			</Tooltip.Content>
-  		</Tooltip.Positioner>
-  	</Portal>
-	{/if}
-</Tooltip>
+
+{#snippet interior()}
+  <PageLink page={linkedPage}>
+     <div class={["relative flex items-center gap-2 rounded-lg p-1 border-2", expanded ? "w-full" : "w-fit", (selected || getCurrentPage()?.id === linkedPage.id) ? "border-primary-500" : "border-transparent"]}>
+       <linkedPage.icon size={height() + 12} class="stroke-primary-500 shrink-0 grow-0"/>
+       {#if expanded}
+         <div class="text-left truncate text-ellipsis w-full"> {linkedPage.title} </div>
+         <button class="right-2 hidden-child h-full hover:bg-primary-contrast-500/75" onclick={() => removePage(linkedPage.id)}><X size={16} class="stroke-primary-500"/></button>
+       {/if}
+     </div>
+ 	</PageLink>
+{/snippet}
+
+
+{#if expanded}
+	{@render interior()}
+{:else}
+  <Tooltip {...tooltipOptions}>
+  	<Tooltip.Trigger>
+   	{@render interior()}
+  	</Tooltip.Trigger>
+   	<Portal>
+    		<Tooltip.Positioner>
+          <Tooltip.Content class="card preset-filled-primary-900-100 p-2 shadow-xl">
+   			  {linkedPage.title}
+   			</Tooltip.Content>
+    		</Tooltip.Positioner>
+   	</Portal>
+  </Tooltip>
+{/if}
 
 
 <style>
-  .text-comp {
-      width: calc(100% - var(--height) + 12px);
+  *>.hidden-child {
+    display: none;  
+  }
+  
+  *:hover>.hidden-child {
+    display: block;
   }
 </style>

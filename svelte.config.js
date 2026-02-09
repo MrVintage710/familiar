@@ -15,8 +15,11 @@ const config = {
     alias: {
       "@components": "src/components",
       "@assets" : "src/assets"
-    }
+    },
   },
+  vitePlugin: {
+    inspector: true
+  }
 };
 
 export default config;

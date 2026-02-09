@@ -44,4 +44,4 @@ export type ItemMeta = {
   tags : string[],
 }
 
-export type Uuid = string;
+export type Uuid = `${string}-${string}-${string}-${string}-${string}`;

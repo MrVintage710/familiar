@@ -19,7 +19,8 @@
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "fuzzysearch-ts": "^1.0.3",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@skeletonlabs/skeleton": "^4.10.0",
