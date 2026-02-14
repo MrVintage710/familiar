@@ -33,7 +33,8 @@ pub fn run() {
             get_character_constructor, 
             rulebook::get_available_rulesets, 
             rulebook::get_available_covers_for_ruleset,
-            rulebook::get_rulebook_settings
+            rulebook::get_rulebook_settings,
+            rulebook::get_available_constructors_for_ruleset
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

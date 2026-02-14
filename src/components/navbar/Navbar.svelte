@@ -1,18 +1,16 @@
 <script lang="ts" module>
   import NavbarItem from "./NavbarItem.svelte";
-  import { Users, BookCopy, House } from "@lucide/svelte";
-  import { getCurrentPage, getPageList, pages } from "$lib/PageState.svelte";
+  import { getPageList, getShortcutList, initNavstate} from "$lib/page/PageState.svelte";
+  import { onMount } from "svelte";
   
   export type Props = {
     width? : number,
     minWidth? : number,
     maxWidth? : number,
-    
   }
 </script>
 
 <script lang="ts">
-    import { getShortcutList } from "$lib/PageState.svelte";
 
   let {
     width = $bindable(240),
@@ -46,8 +44,6 @@
     event.preventDefault()
     width = Math.max(Math.min(event.clientX, maxWidth), minWidth);
   }
-  
-  
 </script>
 
 <svelte:window onmousemove={handle} onmouseup={stopDragging} />
@@ -60,13 +56,13 @@
     onmousedown={startDrag}
     class={["absolute right-0 h-full hover:border-r-2 hover:border-secondary-500 w-2.5 -mt-2 hover:cursor-ew-resize focus:outline-none", isDragging && "border-r-2 border-secondary-500 cursor-ew-resize"]}
   />
-  <div class="flex flex-wrap justify-start gap-1 h-fit border-b-2 border-primary-500 pb-4 w-full">
+  <div class="flex flex-wrap justify-start gap-1 h-fit border-b-2 border-dashed border-primary-500 pb-4 w-full">
     {#each getShortcutList() as shortcut }
       <NavbarItem linkedPage={shortcut} expanded={false} />
     {/each}
   </div>
   {#each getPageList() as page}
-    <NavbarItem linkedPage={page} />
+    <NavbarItem uuid={page.id} />
   {/each}
 </nav>
 

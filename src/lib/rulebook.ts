@@ -15,3 +15,8 @@ export async function getRulesetList(): Promise<RulesetInfoWithCovers[]> {
   const result = rulesets.map((ruleset, index) => ({ ...ruleset, covers: covers[index] } as RulesetInfoWithCovers))
   return result
 }
+
+export async function getConstructorsForRuleset(ruleset : string): Promise<any> {
+  const result = await invoke("get_available_constructors_for_ruleset", { ruleset })
+  return result
+}

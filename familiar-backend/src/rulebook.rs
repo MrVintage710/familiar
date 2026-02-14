@@ -1,7 +1,7 @@
 use std::{collections::HashSet, fs::DirEntry, path::PathBuf};
 
-use fre::{asset::Asset, prelude::Rulebook, rulebook::{RulebookMeta, RulesetInfo}};
-use pak_db::meta::PakMeta;
+use fre::{asset::Asset, constructor::Constructor, prelude::Rulebook, rulebook::{RulebookMeta, RulesetInfo}};
+use pak_db::{meta::PakMeta, query::PakQuery};
 
 use crate::error::{FamiliarError, FamiliarResult};
 
@@ -29,9 +29,7 @@ pub fn get_rulebook_list() -> FamiliarResult<Vec<PathBuf>> {
 pub fn get_rulebooks_in_rulesets(ruleset : &str) -> FamiliarResult<Vec<Rulebook>> {
     let rulebooks = get_rulebook_list()?
         .into_iter()
-        .inspect(|path| println!("{path:?}"))
         .filter_map(|rulebook_path| Rulebook::from_file(rulebook_path).ok())
-        .inspect(|path| println!("{:?}", path.settings))
         .filter(|rulebook| {
             if rulebook.settings.ruleset.short().is_some() && rulebook.settings.ruleset.short().unwrap() == ruleset {return true}
             rulebook.settings.ruleset.title() == ruleset
@@ -81,8 +79,19 @@ pub fn get_available_rulesets() -> FamiliarResult<Vec<RulesetInfo>> {
 pub fn get_available_covers_for_ruleset(ruleset : &str) -> FamiliarResult<Vec<Asset>> {
     let covers = get_rulebooks_in_rulesets(ruleset)?
         .into_iter()
-        .inspect(|rulebook| println!("Testing {:?}", rulebook.settings))
         .filter_map(|rulebook| rulebook.settings.cover)
+        .collect::<Vec<_>>()
+    ;
+    
+    Ok(covers)
+}
+
+#[tauri::command]
+pub fn get_available_constructors_for_ruleset(ruleset : &str) -> FamiliarResult<Vec<Constructor>> {
+    let covers = get_rulebooks_in_rulesets(ruleset)?
+        .into_iter()
+        .filter_map(|rulebook| rulebook.pak.query::<(Constructor, )>(PakQuery::All).ok())
+        .flatten()
         .collect::<Vec<_>>()
     ;
     

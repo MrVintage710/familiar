@@ -1,6 +1,6 @@
 <script lang="ts" module>
-  import { gotoPage, type Page } from "$lib/PageState.svelte";
-  import type { Uuid } from "$lib/types";
+  import type { Page } from "$lib/page/Page.svelte";
+  import { gotoPage } from "$lib/page/PageState.svelte";
   import type { HTMLAttributes } from "svelte/elements";
 
   export type Props = HTMLAttributes<HTMLSpanElement> & {
@@ -16,6 +16,6 @@
   } : Props = $props()
 </script>
 
-<span {...props} class="hover:cursor-pointer" data-href={page.url} tabindex="0" role="link" onclick={() => gotoPage(page.id)}>
+<span {...props} class="hover:cursor-pointer" data-href={page.getUrl} tabindex="0" role="link" onclick={() => gotoPage(page.id)}>
   {@render children?.()}
 </span>
