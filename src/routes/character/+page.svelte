@@ -8,7 +8,6 @@
 
 <script lang="ts">
   let page : CharacterSelectionPage = getPage(CHARACTER_PAGE_UUID) as CharacterSelectionPage;
-  console.log(page)
   
   let results = $state([]);
 </script>

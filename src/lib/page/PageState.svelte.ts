@@ -45,7 +45,6 @@ export function getCurrentPage(): Page | undefined {
 
 export function gotoPage(uuid: Uuid) {
   const page = getPage(uuid);
-  console.log("gotoPage", uuid, page, pages)
   if (page) {
     goto(page.getUrl());
     currentPage = page.id;

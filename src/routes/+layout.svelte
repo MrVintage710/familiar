@@ -10,7 +10,7 @@
 </script>
 
 
-<div class="w-full h-screen grid grid-cols-[auto_1fr] items-stretch">
+<div class="w-screen h-screen grid grid-cols-[auto_1fr] items-stretch overflow-x-clip">
 	<Navbar />
   {@render children()}
 </div>

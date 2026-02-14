@@ -4,7 +4,7 @@ import { Page, StatefulPage } from "./Page.svelte";
 import { v4 as uuidv4 } from "uuid";
 import type { Component } from "svelte";
 
-export default class NewCharacterPage extends Page {
+export default class CreateCharacterPage extends Page {
   title: string = "New Character";
   icon: Component<IconProps> = UserPlus;
   id: Uuid = uuidv4() as Uuid;
@@ -17,7 +17,6 @@ export default class NewCharacterPage extends Page {
   }
   
   getUrl(): string {
-    console.log(encodeURI(`/character/${this.ruleset}/new`));
     return encodeURI(`/character/${this.ruleset}/new`);
   }
 }

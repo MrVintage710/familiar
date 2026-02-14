@@ -60,3 +60,7 @@ export type Uuid = `${string}-${string}-${string}-${string}-${string}`;
 //        Constructor
 //==============================================================================================
 
+export type Constructor = {
+  meta: ItemMeta,
+  
+}
