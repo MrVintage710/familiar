@@ -57,10 +57,48 @@ export class ItemMeta {
 export type Uuid = `${string}-${string}-${string}-${string}-${string}`;
 
 //==============================================================================================
+//        StatValue
+//==============================================================================================
+
+type StatString = { "String": string }
+
+export type StatValue = StatString
+
+//==============================================================================================
 //        Constructor
 //==============================================================================================
 
+type ConstructorString = { "String": { default: string } }
+
+type ConstructorNumber = { "Number": { default: number } }
+
+type ConstructorInt = { "Int": { default: number } }
+
+type ConstructorChoice = {
+  "Choice": {
+    values: StatValue,
+    number_of_selections: number,
+    number_of_choices: number
+  }
+}
+
+type ConstructorSection = {
+  "Section" : {[key : string] : ConstructorValue}
+}
+
+export type ConstructorValue =
+  ConstructorString | 
+  ConstructorNumber |
+  ConstructorInt |
+  ConstructorChoice |
+  ConstructorSection
+  
+export type ConstructorStep = {
+  [key : string] : ConstructorValue
+}
+
 export type Constructor = {
   meta: ItemMeta,
-  
+  steps: {[key : string] : ConstructorStep}
 }
+

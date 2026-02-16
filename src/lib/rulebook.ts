@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { Asset, RulebookMeta, RulesetInfo, RulesetInfoWithCovers } from "./types";
+import type { Asset, Constructor, RulebookMeta, RulesetInfo, RulesetInfoWithCovers } from "./types";
 
 
 export async function getAvailableCoversForRuleset(ruleset: String) {
@@ -16,7 +16,7 @@ export async function getRulesetList(): Promise<RulesetInfoWithCovers[]> {
   return result
 }
 
-export async function getConstructorsForRuleset(ruleset : string): Promise<any> {
-  const result = await invoke("get_available_constructors_for_ruleset", { ruleset })
+export async function getConstructorsForRuleset(ruleset : string): Promise<Constructor[]> {
+  const result = await invoke("get_available_constructors_for_ruleset", { ruleset }) as Constructor[];
   return result
 }

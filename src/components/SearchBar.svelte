@@ -20,7 +20,7 @@
     }, debounce)
 </script>
 
-<div class={[clazz, "h-12 preset-outlined-primary-500 rounded-2xl flex items-center px-2 gap-2"]}>
+<div class={[clazz, "h-12 container preset-outlined-primary-500 rounded-2xl flex items-center px-2 gap-2"]}>
     <Search class="stroke-primary-500"/>
     <input 
         {oninput}

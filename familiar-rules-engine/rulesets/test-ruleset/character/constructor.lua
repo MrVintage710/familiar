@@ -7,10 +7,12 @@ CharacterConstructor:step("Basic Information", function (ctx)
     ctx:integer("Level", 1)
 end)
 
-CharacterConstructor:step("Attribues", function (ctx)
-    ctx:integer("Might", 1);
-    ctx:integer("Magic", 1);
-    ctx:integer("Mechanics", 1);
+CharacterConstructor:step("Attribues", function(ctx)
+    ctx:section("Select an Attribute", function(ctx)
+        ctx:integer("Might", 1);
+        ctx:integer("Magic", 1);
+        ctx:integer("Mechanics", 1);
+    end)
 end)
 
 CharacterConstructor:finalize(function (object)
