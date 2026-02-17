@@ -1,6 +1,6 @@
 import type { RulesetInfo, Uuid } from "$lib/types";
 import { UserPlus, type IconProps } from "@lucide/svelte";
-import { Page, StatefulPage } from "./Page.svelte";
+import { Page } from "./Page.svelte";
 import { v4 as uuidv4 } from "uuid";
 import type { Component } from "svelte";
 
@@ -18,5 +18,13 @@ export default class CreateCharacterPage extends Page {
   
   getUrl(): string {
     return encodeURI(`/character/${this.ruleset}/new`);
+  }
+  
+  onSave(): string {
+    return this.ruleset
+  }
+  
+  onLoad(data: string): void {
+    this.ruleset = data;
   }
 }

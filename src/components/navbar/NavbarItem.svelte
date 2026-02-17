@@ -5,7 +5,7 @@
   import { X } from "@lucide/svelte";
   import { Page } from "$lib/page/Page.svelte";
   import type { Uuid } from "$lib/types";
-    import CharacterSelectionPage from "$lib/page/CharacterSelectionPage.svelte";
+  import CharacterSelectionPage from "$lib/page/CharacterSelectionPage.svelte";
 
   export type Props = {
     selected? : boolean,

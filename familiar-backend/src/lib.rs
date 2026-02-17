@@ -3,6 +3,7 @@ use pak_db::{Pak, query::PakQuery};
 
 mod rulebook;
 mod error;
+mod appstate;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -36,6 +37,10 @@ pub fn run() {
             rulebook::get_rulebook_settings,
             rulebook::get_available_constructors_for_ruleset
         ])
+        .setup(|app| {
+            
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

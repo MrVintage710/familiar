@@ -2,7 +2,7 @@
   import type { RulesetInfoWithCovers } from "$lib/types";
   import { Plus } from "@lucide/svelte";
   import Button from "./Button.svelte";
-  import CreateCharacterPage from "$lib/page/NewCharacterPage.svelte";
+  import CreateCharacterPage from "$lib/page/CreateCharacterPage.svelte";
   import { addPage } from "$lib/page/PageState.svelte";
 
   export type Props = {

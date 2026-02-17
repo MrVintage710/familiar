@@ -1,6 +1,6 @@
 import { User, UserIcon, type IconProps } from "@lucide/svelte";
 import type { Component } from "svelte";
-import { Page, StatefulPage } from "./Page.svelte";
+import { Page } from "./Page.svelte";
 import type { Uuid } from "$lib/types";
 
 export type CharacterPageState = {
