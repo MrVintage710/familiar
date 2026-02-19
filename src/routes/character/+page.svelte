@@ -3,11 +3,11 @@
   import RulesetCard from "@components/RulesetCard.svelte";
   import WaitDiv from "@components/load/WaitDiv.svelte";
   import CharacterSelectionPage, { CHARACTER_PAGE_UUID } from "$lib/page/CharacterSelectionPage.svelte";
-  import { getPage } from "$lib/page/PageState.svelte";
+  import PageState from "$lib/page/PageState.svelte";
 </script>
 
 <script lang="ts">
-  let page : CharacterSelectionPage = getPage(CHARACTER_PAGE_UUID) as CharacterSelectionPage;
+  let page : CharacterSelectionPage = PageState.getPage(CHARACTER_PAGE_UUID) as CharacterSelectionPage;
   
   let results = $state([]);
 </script>

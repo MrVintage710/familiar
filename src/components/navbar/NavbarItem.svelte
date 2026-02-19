@@ -1,6 +1,6 @@
 <script lang="ts" module>
   import { Portal, Tooltip, type TooltipRootProps } from "@skeletonlabs/skeleton-svelte";
-  import { getCurrentPage, getPage, gotoPage } from "$lib/page/PageState.svelte";
+  import PageState from "$lib/page/PageState.svelte";
   import PageLink from "./PageLink.svelte";
   import { X } from "@lucide/svelte";
   import { Page } from "$lib/page/Page.svelte";
@@ -22,20 +22,21 @@
     expanded = true,
     tooltipOptions,
     uuid,
-    linkedPage = getPage(uuid) ?? new CharacterSelectionPage(),
+    linkedPage = PageState.getPage(uuid) ?? new CharacterSelectionPage(),
   } : Props = $props()
   
   const height = () => expanded ? 12 : 32;
+  const isSelected = $derived(PageState.currentPageId === linkedPage.id);
 </script>
 
 
 {#snippet interior()}
   <PageLink page={linkedPage}>
-    <div class={["relative flex items-center gap-2 rounded-lg p-1 border-2", expanded ? "w-full" : "w-fit", (selected || getCurrentPage()?.id === linkedPage.id) ? "border-primary-500" : "border-transparent"]}>
+    <div class={["relative flex items-center gap-2 rounded-lg p-1 border-2", expanded ? "w-full" : "w-fit", selected || isSelected ? "border-primary-500" : "border-transparent"]}>
       <linkedPage.icon size={height() + 12} class="stroke-primary-500 shrink-0 grow-0"/>
       {#if expanded}
-      <div class="text-left truncate text-ellipsis w-full"> {linkedPage?.title} </div>
-      <!-- <button class="right-2 hidden-child h-full hover:bg-primary-contrast-500/75" onclick={() => removePage(linkedPage.id)}><X size={16} class="stroke-primary-500"/></button> -->
+        <div class="text-left truncate text-ellipsis w-full"> {linkedPage.title} </div>
+        <button class="right-2 hidden-child h-full hover:bg-primary-contrast-500/75" onclick={() => PageState.removePage(linkedPage.id)}><X size={16} class="stroke-primary-500"/></button>
       {/if}
     </div>
  	</PageLink>

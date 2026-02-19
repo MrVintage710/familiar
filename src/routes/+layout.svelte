@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { initNavstate } from '$lib/page/PageState.svelte';
+  import PageState from '$lib/page/PageState.svelte';
   import Navbar from '@components/navbar/Navbar.svelte';
   import { onMount } from 'svelte';
 
   let { children } = $props();
   import("../style.css")
   
-  onMount(initNavstate)
+  onMount(() => PageState.init())
 </script>
 
 
