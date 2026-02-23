@@ -1,21 +1,16 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { getConstructorsForRuleset } from "$lib/rulebook";
+  import type CreateCharacterPage from "$lib/page/CreateCharacterPage.svelte";
+  import PageState from "$lib/page/PageState.svelte";
   import ConstructorForm from "@components/constructor/ConstructorForm.svelte";
   import WaitDiv from "@components/load/WaitDiv.svelte";
-  import { type Constructor } from "$lib/types";
-  import { onMount } from "svelte";
-
-  let { ruleset = "" } = page.params;
   
-  let characterConstructor = $state<Constructor>();
-  
-  onMount(() => getConstructorsForRuleset(ruleset).then(data => characterConstructor = data.find(c => c.meta.name === "Character Creation")))
+  let tab : CreateCharacterPage = PageState.currentPage as CreateCharacterPage;
 </script>
 
-
-<WaitDiv value={characterConstructor} class="w-full h-full overflow-x-scroll">
-  {#snippet done(characterConstructor)}
-    <ConstructorForm  constructor={characterConstructor}/>
+<!-- <div class="absolute top-2 right-2 bg-surface-900 z-50 p-2 max-w-3/4">{JSON.stringify($state.snapshot(tab?.state), null, 4)}</div> -->
+<WaitDiv value={tab.state.constructorId} class="w-full h-full">
+  {#snippet done(constructorUuid)}
+    <ConstructorForm constructor={constructorUuid}/>
   {/snippet}
 </WaitDiv>

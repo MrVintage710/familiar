@@ -1,6 +1,6 @@
 <script lang="ts" module>
     import { Progress } from '@skeletonlabs/skeleton-svelte';
-  import type { Snippet } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
 
   export type WaitDivProps<T> = HTMLAttributes<HTMLDivElement> & {

@@ -68,7 +68,7 @@ export type StatValue = StatString
 //        Constructor
 //==============================================================================================
 
-type ConstructorString = { "String": { default: string } }
+export type ConstructorString = { "String": { default: string } }
 
 type ConstructorNumber = { "Number": { default: number } }
 

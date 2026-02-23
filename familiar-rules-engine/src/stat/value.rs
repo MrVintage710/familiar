@@ -21,8 +21,6 @@ pub enum StatValue {
     Array(Vec<StatValue>),
     LuaFunction(Vec<u8>),
     Query(Query),
-    #[serde(skip)]
-    LuaValue(Value),
     #[default]
     None
 }
@@ -58,7 +56,6 @@ impl Debug for StatValue {
             Self::Record(arg0) => arg0.fmt(f),
             Self::Array(arg0) => arg0.fmt(f),
             Self::LuaFunction(_) => f.write_str("LuaFunction"),
-            Self::LuaValue(arg0) => arg0.fmt(f),
             Self::Query(argo) => f.debug_tuple("Query").field(&argo.get_query()).finish(),
             Self::None => write!(f, "None"),
         }
@@ -130,9 +127,9 @@ impl FromLua for StatValue {
             Value::Table(_) => {
                 if let Ok(map) = HashMap::<String, StatValue>::from_lua(value.clone(), lua) { Ok(StatValue::Record(map)) }
                 else if let Ok(array) = Vec::<StatValue>::from_lua(value.clone(), lua) { Ok(StatValue::Array(array)) }
-                else { Ok(StatValue::LuaValue(value)) } 
+                else { Ok(StatValue::None)}
             },
-            _ => Ok(StatValue::LuaValue(value))
+            _ => Ok(StatValue::None)
         }
     }
 }
@@ -147,7 +144,6 @@ impl IntoLua for StatValue {
             StatValue::Record(hash_map) => hash_map.into_lua(lua),
             StatValue::Array(stat_values) => stat_values.into_lua(lua),
             StatValue::LuaFunction(bytes) => lua.load(bytes).into_function()?.into_lua(lua),
-            StatValue::LuaValue(value) => Ok(value),
             StatValue::Query(query) => query.into_lua(lua),
             StatValue::None => Ok(Value::Nil),
         }

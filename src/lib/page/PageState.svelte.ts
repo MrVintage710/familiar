@@ -1,7 +1,7 @@
 import { goto } from "$app/navigation";
 import type { Uuid } from "../types";
 import CharacterSelectionPage, { CHARACTER_PAGE_UUID } from "./CharacterSelectionPage.svelte";
-import type { Page, PageData } from "./Page.svelte";
+import { Page } from "./Page.svelte";
 
 import CreateCharacterPage from "./CreateCharacterPage.svelte";
 
@@ -23,24 +23,31 @@ class PageStateClass {
   public shortcuts: Page[] = $state([
     new CharacterSelectionPage()
   ]);
-  private currentPage: number = $state(0);
-  public currentPageId: Uuid | null = $derived(this.indexPage(this.currentPage)?.id ?? null)
+  private currentPageIndex: number = $state(0);
+  public currentPage?: Page = $derived(this.indexPage(this.currentPageIndex))
+  public currentPageId: Uuid | null = $derived(this.indexPage(this.currentPageIndex)?.id ?? null)
   
   addPage(page: Page, shouldSave: boolean = true) {
     this.pages.push(page)
-    if (shouldSave) this.savePages();
+    page.onAdd?.().finally(() => {
+      if (shouldSave) this.savePages();
+    })
   }
   
   removePage(id: Uuid, shouldSave: boolean = true) {
     let index = this.getPageIndex(id);
-    this.pages = this.pages.filter(page => id !== page.id)
-    if (this.currentPage >= this.shortcuts.length + this.pages.length) {
-      this.currentPage = (this.shortcuts.length + this.pages.length - 1)
-      this.gotoIndex(this.currentPage)
+    this.pages = this.pages.filter(page => {
+      if (id === page.id) {
+        page.onClose?.(); return false
+      } else { return true }
+    })
+    if (this.currentPageIndex >= this.shortcuts.length + this.pages.length) {
+      this.currentPageIndex = (this.shortcuts.length + this.pages.length - 1)
+      this.gotoIndex(this.currentPageIndex)
     }
     if (shouldSave) {
       this.savePages();
-      sessionStorage.setItem("currentPage", String($state.snapshot(this.currentPage)))
+      sessionStorage.setItem("currentPage", String($state.snapshot(this.currentPageIndex)))
     }
   }
   
@@ -65,12 +72,12 @@ class PageStateClass {
     return this.shortcuts[index] ?? this.pages[index - this.shortcuts.length]
   }
   
-  getCurrentPage(): Page | undefined {
-    return this.shortcuts[this.currentPage] ?? this.pages[this.currentPage - this.shortcuts.length]
+  getCurrentPage<T extends Page = Page>(): T | undefined {
+    return this.shortcuts[this.currentPageIndex] as T ?? this.pages[this.currentPageIndex - this.shortcuts.length] as T
   }
   
   isPageSeletected(uuid: Uuid): boolean {
-    return this.getPageIndex(uuid) === this.currentPage
+    return this.getPageIndex(uuid) === this.currentPageIndex
   }
   
   gotoPage(uuid: Uuid) {
@@ -78,9 +85,9 @@ class PageStateClass {
     const page = this.indexPage(index);
     if (index >= 0 && page) {
       goto(page.getUrl());
-      this.currentPage = index;
+      this.currentPageIndex = index;
       page.onOpen?.()
-      sessionStorage.setItem("currentPage", String($state.snapshot(this.currentPage)))
+      sessionStorage.setItem("currentPage", String($state.snapshot(this.currentPageIndex)))
     }
   }
   
@@ -88,9 +95,9 @@ class PageStateClass {
     const page = this.indexPage(index);
     if (index >= 0 && page) {
       goto(page.getUrl());
-      this.currentPage = index;
+      this.currentPageIndex = index;
       page.onOpen?.()
-      sessionStorage.setItem("currentPage", String($state.snapshot(this.currentPage)))
+      sessionStorage.setItem("currentPage", String($state.snapshot(this.currentPageIndex)))
     }
   }
   
@@ -100,28 +107,30 @@ class PageStateClass {
   }
   
   savePages() {
+    if (!this) return;
     const storedPages = this.pages
       .filter(page => !!page)
       .map(page => ({
         id: page.id,
         pageType: page.constructor.name,
-        state: page.onSave?.() ?? null
+        state: page.save()
       }));
     sessionStorage.setItem("pages", JSON.stringify(storedPages))
   }
   
   loadPages() {
     const pageStorage: PageProxy[] = JSON.parse(sessionStorage.getItem("pages") ?? "[]")
-    this.currentPage = Number(sessionStorage.getItem("currentPage") ?? 0);
+    this.currentPageIndex = Number(sessionStorage.getItem("currentPage") ?? 0);
     this.pages = pageStorage.map(page => {
-      let pageInstance : Page = eval("new " + page.pageType + "(page.state)");
+      let pageInstance: Page = eval("new " + page.pageType + "()");
+      pageInstance.state = page.state;
       pageInstance.id = page.id;
-      if(page.state != null) pageInstance.onLoad?.(page.state)
+      pageInstance.onAdd?.()
       return pageInstance
     })
   }
 }
 
-const PageState = new PageStateClass()
+const PageState = $state(new PageStateClass())
 
 export default PageState;

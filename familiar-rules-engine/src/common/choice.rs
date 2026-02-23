@@ -1,6 +1,6 @@
 use std::{collections::{BTreeMap, VecDeque}, fmt::Debug, marker::PhantomData, sync::{Arc, RwLock, Weak}};
 
-use mlua::{FromLua, Function, Lua, UserData, Value};
+use mlua::{FromLua, Function, Lua, Table, UserData, Value};
 use ordermap::OrderMap;
 use serde::{ser::Error, Deserialize, Serialize};
 
@@ -17,41 +17,6 @@ impl Input {
     pub fn new() -> Self {
         Self(OrderMap::new())
     }
-    
-    // pub fn set_choice(&mut self, name : &str, index : usize) {
-    //     let Some(value) = self.1.get_mut(name) else { return };
-    //     if !value.is_choice() { return }
-    //     if value.is_complete() {
-    //         value.pop();
-    //     }
-    //     value.choose(index);
-    // }
-    
-    // pub fn set_string(&mut self, name : &str, string : &str) {
-    //     let Some(value) = self.1.get_mut(name) else { return };
-    //     if !value.is_string() { return }
-    //     value.set_string(string.to_string());
-    // }
-    
-    // pub fn set_number(&mut self, name : &str, number : f64) {
-    //     let Some(value) = self.1.get_mut(name) else { return };
-    //     if !value.is_string() { return }
-    //     value.set_number(number);
-    // }
-    
-    // pub fn set_int(&mut self, name : &str, int : i64) {
-    //     let Some(value) = self.1.get_mut(name) else { ret0.2.3urn };
-    //     if !value.is_string() { return }
-    //     value.set_int(int);
-    // }
-    
-    // pub fn choice_count(&self) -> usize {
-    //     self.1.len()
-    // }
-    
-    // pub fn is_complete(&self) -> bool {
-    //     self.1.iter().all(|(_, entry)| entry.is_complete())
-    // }
     
     pub fn iter(&self) -> ordermap::map::Iter<'_, String, InputValue> {
         self.0.iter()
@@ -82,6 +47,24 @@ pub struct LuaInput(Weak<RwLock<Input>>);
 
 impl UserData for LuaInput {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method_mut("point_buy", |lua : &Lua, this : &mut Self, (name, callback, options) : (String, Function, Option<Table>)| {
+            let Some(this) = Input::from_ref(this) else { return Ok(())};
+            let Ok(mut this) = this.write() else { return Ok(()) };
+            
+            let mut input = Input::default();
+            input.as_lua_ref(lua, |_, reference| {
+                callback.call(reference)
+            })?;
+            let values = input.0.into_iter().filter(|(_, input_value)| input_value.is_int()).collect();
+            
+            let options = options.unwrap_or(lua.create_table()?); 
+            let points : i32 = options.get("points").unwrap_or(1); 
+            let max : Option<i32> = options.get("max").ok(); 
+            
+            this.0.insert(name, InputValue::PointBuy { values, points, max });           
+            Ok(())
+        });
+        
         methods.add_method_mut("choice", |lua : &Lua, this : &mut Self, (name, choices, number_of_choices, number_of_selections) : (String, Value, Option<u32>, Option<u32>)| {
             let Some(this) = Input::from_ref(this) else { return Ok(())};
             let Ok(mut this) = this.write() else { return Ok(()) };
@@ -150,6 +133,11 @@ impl UserData for LuaInput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InputValue {
+    PointBuy {
+        values : OrderMap<String, InputValue>,
+        points : i32,
+        max : Option<i32>
+    },
     Section(OrderMap<String, InputValue>),
     ChoiceQuery {
         query : Query,
@@ -173,96 +161,61 @@ pub enum InputValue {
 }
 
 impl InputValue {
-    pub fn is_choice(&self) -> bool {
-        matches!(self, InputValue::Choice { .. } | InputValue::ChoiceQuery { .. })
+    /// Returns `true` if the input value is [`PointBuy`].
+    ///
+    /// [`PointBuy`]: InputValue::PointBuy
+    #[must_use]
+    pub fn is_point_buy(&self) -> bool {
+        matches!(self, Self::PointBuy { .. })
     }
     
+    /// Returns `true` if the input value is [`Section`].
+    ///
+    /// [`Section`]: InputValue::Section
+    #[must_use]
     pub fn is_section(&self) -> bool {
-        matches!(self, InputValue::Section(..))
+        matches!(self, Self::Section(..))
     }
-    
+
+    /// Returns `true` if the input value is [`ChoiceQuery`].
+    ///
+    /// [`ChoiceQuery`]: InputValue::ChoiceQuery
+    #[must_use]
+    pub fn is_choice_query(&self) -> bool {
+        matches!(self, Self::ChoiceQuery { .. })
+    }
+
+    /// Returns `true` if the input value is [`Choice`].
+    ///
+    /// [`Choice`]: InputValue::Choice
+    #[must_use]
+    pub fn is_choice(&self) -> bool {
+        matches!(self, Self::Choice { .. })
+    }
+
+    /// Returns `true` if the input value is [`String`].
+    ///
+    /// [`String`]: InputValue::String
+    #[must_use]
     pub fn is_string(&self) -> bool {
-        matches!(self, InputValue::String{..})
+        matches!(self, Self::String { .. })
     }
-    
+
+    /// Returns `true` if the input value is [`Number`].
+    ///
+    /// [`Number`]: InputValue::Number
+    #[must_use]
     pub fn is_number(&self) -> bool {
-        matches!(self, InputValue::Number{..})
+        matches!(self, Self::Number { .. })
     }
-    
+
+    /// Returns `true` if the input value is [`Int`].
+    ///
+    /// [`Int`]: InputValue::Int
+    #[must_use]
     pub fn is_int(&self) -> bool {
-        matches!(self, InputValue::Int{..})
+        matches!(self, Self::Int { .. })
     }
-    
-    // pub fn choices_made(&self) -> usize {
-    //     match self {
-    //         InputValue::ChoiceQuery { choices, .. } => choices.len(),
-    //         InputValue::Choice { choices, .. } => choices.len(),
-    //         InputValue::String(value, ..) => if value.is_some() { 1 } else { 0 },
-    //         InputValue::Number(value, ..) => if value.is_some() { 1 } else { 0 },
-    //         InputValue::Int(value, ..) => if value.is_some() { 1 } else { 0 },
-    //         InputValue::Section(inputs) => inputs.iter().map(|i| i.1.choices_made()).sum()
-    //     }
-    // }
-    
-    // pub fn max_choices(&self) -> usize {
-    //     match self {
-    //         InputValue::ChoiceQuery { number_of_choices, .. } => *number_of_choices as usize,
-    //         InputValue::Choice { number_of_choices, .. } => *number_of_choices as usize,
-    //         InputValue::Section(inputs) => inputs.iter().map(|i| i.1.max_choices()).sum(),
-    //         _ => 1
-    //     }
-    // }
-    
-    // pub fn is_complete(&self) -> bool {
-    //     match self {
-    //         InputValue::Section(values) => values.iter().all(|i| i.1.is_complete()),
-    //         InputValue::ChoiceQuery { number_of_choices, choices, .. } => choices.len() >= *number_of_choices as usize,
-    //         InputValue::Choice { number_of_choices, choices, .. } => choices.len() >= *number_of_choices as usize,
-    //         InputValue::String(value) => value.is_some(),
-    //         InputValue::Number(value) => value.is_some(),
-    //         InputValue::Int(value) => value.is_some(),
-    //     }
-    // }
-    
-    // pub fn pop(&mut self) {
-    //     match self {
-    //         InputValue::ChoiceQuery { choices, .. } => { choices.pop_front(); },
-    //         InputValue::Choice { choices, .. } => { choices.pop_front(); },
-    //         InputValue::String(value, ..) => { *value = None },
-    //         InputValue::Number(value, ..) => { *value = None},
-    //         InputValue::Int(value, ..) => { *value = None },
-    //         _ => {}
-    //     };
-    // }
-    
-    // pub fn choose(&mut self, index : usize) {
-    //     match self {
-    //         InputValue::ChoiceQuery { choices, .. } => { choices.push_back(index as u32); },
-    //         InputValue::Choice { choices, .. } => { choices.push_back(index as u32); },
-    //         _ => {}
-    //     };
-    // }
-    
-    // pub fn set_string(&mut self, string : String) {
-    //     match self {
-    //         Self::String(value, ..) => { *value = Some(string); },
-    //         _ => {}
-    //     }
-    // }
-    
-    // pub fn set_number(&mut self, number : f64) {
-    //     match self {
-    //         Self::Number(value, ..) => { *value = Some(number); },
-    //         _ => {}
-    //     }
-    // }
-    
-    // pub fn set_int(&mut self, int : i64) {
-    //     match self {
-    //         Self::Int(value, ..) => { *value = Some(int); },
-    //         _ => {}
-    //     }
-    // }
     
     pub fn iter(&self) -> Option<ordermap::map::Iter<'_, String, InputValue>> {
         if let InputValue::Section(map) = self {
@@ -275,4 +228,5 @@ impl InputValue {
             Some(map.iter_mut())
         } else { None }
     }
+
 }

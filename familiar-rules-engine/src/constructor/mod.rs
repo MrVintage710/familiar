@@ -3,7 +3,7 @@ use ordermap::OrderMap;
 use pak_db::index::{Indices, PakSearchable};
 use serde::{Deserialize, Serialize};
 
-use crate::{common::{choice::Input, meta::{HasItemMeta, ItemMeta, enable_meta_methods}}, error::FreResult, lua::reference::LuaRef, object::Object, stat::statblock::StatBlock};
+use crate::{common::{choice::Input, meta::{HasItemMeta, ItemMeta, enable_meta_methods}}, error::{ConstructorError, FreError, FreException, FreResult}, lua::reference::LuaRef, object::Object, stat::statblock::StatBlock};
 
 //==============================================================================================
 //        
@@ -13,7 +13,8 @@ use crate::{common::{choice::Input, meta::{HasItemMeta, ItemMeta, enable_meta_me
 pub struct Constructor {
     meta : ItemMeta,
     finalize : Option<Vec<u8>>,
-    steps : OrderMap<String, Input>
+    steps : OrderMap<String, Vec<u8>>
+    // steps : OrderMap<String, Input>
 }
 
 impl Constructor {
@@ -25,23 +26,34 @@ impl Constructor {
         }
     }
     
-    pub fn steps(&self) -> ordermap::map::Iter<'_, String, Input>  {
-        self.steps.iter()
+    pub fn process_step(&self, lua : &Lua, index : usize) -> FreResult<Input> {
+        let Some((_, step)) = self.steps.get_index(index) else {return Err(ConstructorError::ConstructorAttemptToIndexEmptyStep(index).into())};
+        let step = lua.load(step).into_function()?;
+        let mut input = Input::new();
+        input.as_lua_ref(lua, |_, value| {
+            step.call(value)
+        })?;
+        
+        return Ok(input)
     }
     
-    pub fn steps_mut(&mut self) -> ordermap::map::IterMut<'_, String, Input> {
-        self.steps.iter_mut()
-    }
+    // pub fn steps(&self) -> ordermap::map::Iter<'_, String, Input>  {
+    //     self.steps.iter()
+    // }
+    
+    // pub fn steps_mut(&mut self) -> ordermap::map::IterMut<'_, String, Input> {
+    //     self.steps.iter_mut()
+    // }
 }
 
 impl UserData for Constructor {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method_mut("step", |lua, this, (name, callback) : (String, Function)| {
-            let mut step = Input::new();
-            step.as_lua_ref(lua, |_, value| {
-                callback.call(value)
-            })?;
-            this.steps.insert(name, step);
+        methods.add_method_mut("step", |_lua, this, (name, callback) : (String, Function)| {
+            // let mut step = Input::new();
+            // step.as_lua_ref(lua, |_, value| {
+            //     callback.call(value)
+            // })?;
+            this.steps.insert(name, callback.dump(true));
             Ok(())
         });
         

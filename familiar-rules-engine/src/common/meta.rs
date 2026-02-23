@@ -56,6 +56,10 @@ impl ItemMeta {
     pub fn uuid(&self) -> Uuid {
         self.uuid
     }
+    
+    pub fn has_tag(&self, tag : &str) -> bool {
+        self.tags.contains(tag)
+    }
 }
 
 impl PakSearchable for ItemMeta {

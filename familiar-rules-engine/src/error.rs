@@ -48,6 +48,9 @@ pub enum FreError {
     #[error("Pattern Error: {0}")]
     PatternError(#[from] glob::PatternError),
     
+    #[error("Constructor Error: {0}")]
+    ConstructorError(#[from] ConstructorError),
+    
     #[error("There was a problem reading '{0}' in the settings file: Wrong type. Expected {1}.")]
     SettingsVariableTypeMismatch(&'static str, &'static str),
     
@@ -75,6 +78,16 @@ impl Into<mlua::Error> for FreError {
         };
         mlua::Error::external(self)
     }
+}
+
+//==============================================================================================
+//        Constructor Errors
+//==============================================================================================
+
+#[derive(Error, Debug)]
+pub enum ConstructorError {
+    #[error("When indexing a Constructor for a step at index {0}, nothing was found")]
+    ConstructorAttemptToIndexEmptyStep(usize)
 }
 
 //==============================================================================================
@@ -111,7 +124,7 @@ pub enum LuaConversionError {
 }
 
 //==============================================================================================
-//        Lua Conversion Errors
+//        Build Errors
 //==============================================================================================
 
 #[derive(Error, Debug)]

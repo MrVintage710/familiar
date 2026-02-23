@@ -1237,6 +1237,7 @@ name = "familiar"
 version = "0.1.0"
 dependencies = [
  "fre",
+ "mlua",
  "pak-db",
  "serde",
  "serde_json",
@@ -1244,6 +1245,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-opener",
  "thiserror 2.0.17",
+ "uuid",
 ]
 
 [[package]]

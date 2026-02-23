@@ -1,21 +1,22 @@
 require("create_character")
 
-CharacterConstructor = constructor("Character Creation");
+local character_constructor = constructor("Character Creation");
+character_constructor:add_tags("Character Creator")
 
-CharacterConstructor:step("Basic Information", function (ctx)
+local step1 = character_constructor:step("Basic Information", function (ctx)
     ctx:string("Name")
     ctx:integer("Level", 1)
 end)
 
-CharacterConstructor:step("Attributes", function(ctx)
-    ctx:section("Select an Attribute", function(ctx)
+character_constructor:step("Attributes", function(ctx, object)
+    ctx:point_buy("Starting Attributes", function (ctx)
         ctx:integer("Might", 1);
         ctx:integer("Magic", 1);
         ctx:integer("Mechanics", 1);
-    end)
+    end, {points = 2, max = 2})
 end)
 
-CharacterConstructor:finalize(function (object)
+character_constructor:finalize(function (object)
     return create_character({
         name = object["Name"],
         might = object["Might"],
@@ -24,4 +25,4 @@ CharacterConstructor:finalize(function (object)
     })
 end)
 
-register(CharacterConstructor)
+register(character_constructor)

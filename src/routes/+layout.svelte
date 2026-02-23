@@ -6,7 +6,13 @@
   let { children } = $props();
   import("../style.css")
   
-  onMount(() => PageState.init())
+  onMount(() => {
+    // window.addEventListener("beforeunload", PageState.savePages)
+    PageState.init()
+    // return () => {
+    //   window.removeEventListener("beforeunload", PageState.savePages)
+    // }
+  })
 </script>
 
 

@@ -4,11 +4,11 @@
   import WaitDiv from "@components/load/WaitDiv.svelte";
   import CharacterSelectionPage, { CHARACTER_PAGE_UUID } from "$lib/page/CharacterSelectionPage.svelte";
   import PageState from "$lib/page/PageState.svelte";
+    import CharacterAvatar from "@components/characters/CharacterAvatar.svelte";
 </script>
 
 <script lang="ts">
-  let page : CharacterSelectionPage = PageState.getPage(CHARACTER_PAGE_UUID) as CharacterSelectionPage;
-  
+  let tab : CharacterSelectionPage = PageState.currentPage as CharacterSelectionPage;
   let results = $state([]);
 </script>
 
@@ -17,7 +17,7 @@
     <SearchBar items={[]} bind:results={results} class="w-full"/>
   </div>
   <!-- Character List -->
-  <WaitDiv value={page.data.rulesets} class="w-full h-full px-4 pb-4 flex justify-center">
+  <WaitDiv value={tab.state.rulesets} class="w-full h-full px-4 pb-4 flex justify-center">
     {#snippet done(rulesets)}
       {#each rulesets as ruleset}
         <RulesetCard {ruleset}/>

@@ -85,15 +85,3 @@ pub fn get_available_covers_for_ruleset(ruleset : &str) -> FamiliarResult<Vec<As
     
     Ok(covers)
 }
-
-#[tauri::command]
-pub fn get_available_constructors_for_ruleset(ruleset : &str) -> FamiliarResult<Vec<Constructor>> {
-    let covers = get_rulebooks_in_rulesets(ruleset)?
-        .into_iter()
-        .filter_map(|rulebook| rulebook.pak.query::<(Constructor, )>(PakQuery::All).ok())
-        .flatten()
-        .collect::<Vec<_>>()
-    ;
-    
-    Ok(covers)
-}
